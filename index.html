@@ -3,1500 +3,1040 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>あみだくじ</title>
+    <title>ターン制RPGゲーム</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* グローバルなスタイルとダークモードのテーマ設定 */
         body {
-            font-family: 'Inter', sans-serif; /* フォントをInterに設定 */
-            background-color: #1a202c; /* ダークな背景色 */
-            color: #e2e8f0; /* 明るいテキスト色 */
-            display: flex; /* gameWrapperを中央に配置するためにbodyをflexコンテナに */
-            flex-direction: column; /* 垂直方向に配置 */
-            align-items: center; /* gameWrapperを水平方向に中央寄せ */
-            justify-content: center; /* gameWrapperを垂直方向に中央寄せ */
-            min-height: 100vh; /* 画面いっぱいの高さ */
-            margin: 0;
-            overflow: hidden; /* スクロールバーを非表示 */
-        }
-        /* ゲーム全体を囲むコンテナのスタイル */
-        #gameWrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between; /* タイトル、キャンバス、ボタン間にスペースを配分 */
-            padding: 1rem; /* ラッパーの内側にパディングを追加 */
-            border-radius: 1rem;
-            background-color: #2d3748; /* キャンバスの背景色に合わせるか、少し異なる色 */
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
-            box-sizing: border-box; /* パディングを幅/高さに含める */
-            /* 幅と高さはJavaScriptで設定されます */
-        }
-
-        /* キャンバスとHINTボタンを横並びにするコンテナ */
-        #canvasAndHintContainer {
-            display: flex;
-            align-items: center; /* 垂直方向の中央揃え */
-            gap: 1rem; /* キャンバスとボタンの間のスペース */
-            margin-bottom: 1.5rem; /* ボタンコンテナとの間にマージン */
-        }
-
-        /* キャンバスのスタイル */
-        canvas {
-            background-color: #2d3748; /* キャンバスの背景色（少し明るいダークトーン） */
-            border-radius: 1rem; /* 角を丸くする */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 影を追加 */
-            flex-shrink: 0; /* コンテンツが大きすぎてもキャンバスが縮まないようにする */
-            /* 幅と高さはJavaScriptで設定されます */
-        }
-        /* ボタンコンテナのスタイル */
-        .button-container {
-            display: flex;
-            gap: 1rem; /* ボタン間のスペース */
-        }
-        /* ゲームボタンの共通スタイル */
-        .game-button {
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.75rem;
-            font-weight: bold;
-            transition: all 0.2s ease-in-out; /* ホバーエフェクトのためのトランジション */
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        .game-button:hover {
-            transform: translateY(-2px); /* ホバー時に少し上に移動 */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* ホバー時に影を濃くする */
-        }
-        /* Go! ボタンのスタイル */
-        #goButton {
-            background-color: #48bb78; /* 緑色 */
-            color: white;
-            border: none;
-        }
-        #goButton:disabled {
-            background-color: #2f855a; /* 無効時の色 */
-            cursor: not-allowed; /* 無効時のカーソル */
-        }
-        /* リセットボタンのスタイル */
-        #resetButton {
-            background-color: #ecc94b; /* 黄色 */
-            color: #2d3748; /* ダークなテキスト色 */
-            border: none;
-        }
-        /* ステージボタンのスタイル */
-        #stageButton {
-            background-color: #4299e1; /* 青色 */
-            color: white;
-            border: none;
-        }
-
-        /* HINTボタンのスタイル */
-        #hintButton {
-            background-color: #e53e3e; /* 赤色 */
-            color: white;
-            border: none;
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
             display: flex;
             justify-content: center;
             align-items: center;
-            /* font-sizeはJSで動的に設定されるため、ここでは削除 */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            transition: all 0.2s ease-in-out;
+            min-height: 100vh;
+            margin: 0;
+            color: #e2e8f0; /* Light text color */
+        }
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            background-color: #2d3748; /* Slightly lighter dark background */
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            padding: 24px;
+            gap: 20px;
+            max-width: 600px; /* Max width for combined content */
+            width: 95%; /* Responsive width */
+            box-sizing: border-box;
+        }
+        #main-content-area { /* New wrapper for left and right sections */
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        }
+        #left-column { /* New container for canvas and boss HP */
+            display: flex;
+            flex-direction: column;
+            gap: 5px; /* Gap between canvas and boss HP */
+            flex-grow: 1; /* Allow left section to grow */
+            min-width: 300px; /* Minimum width for canvas */
+            max-width: 374px; /* Max width for 11x11 field with TILE_SIZE=34 */
+        }
+        #canvas-wrapper {
+            position: relative;
+            border: 2px solid #4a5568; /* Darker gray border */
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #1a202c; /* Very dark background for field */
+            aspect-ratio: 1 / 1; /* Keep aspect ratio */
+            display: flex; /* Center canvas content */
+            justify-content: center;
+            align-items: center;
+            width: 100%; /* Take full width of its parent */
+        }
+        canvas {
+            display: block;
+            background-color: #1a202c; /* Very dark background for field */
+        }
+        #right-control-panel { /* Container for player HP, attacks, directions */
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+            flex-shrink: 0; /* Prevent shrinking on larger screens */
+            width: 200px; /* Fixed width for control panel */
+        }
+        .direction-buttons, .attack-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .direction-buttons {
+            align-items: center;
+        }
+        .direction-buttons div {
+            display: flex;
+            gap: 8px;
+        }
+        .game-button {
+            background-color: #4299e1; /* Blue */
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-weight: bold;
             cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            border: none;
         }
-        #hintButton:hover {
+        .game-button:hover:not(:disabled) {
+            background-color: #3182ce; /* Darker blue */
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
-        #hintButton.active {
-            background-color: #38a169; /* ON時の色 (緑色) */
+        .game-button:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .game-button:disabled {
+            background-color: #4a5568; /* Darker gray for disabled */
+            color: #a0aec0; /* Lighter gray text for disabled */
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .attack-button {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            text-align: left;
+            line-height: 1.2;
+        }
+        .attack-button.active {
+            border: 3px solid #f6e05e; /* Yellow border for active */
+            box-shadow: 0 0 15px rgba(246, 224, 94, 0.7);
+        }
+        #red-attack { background-color: #c53030; } /* Darker Red */
+        #red-attack.active { border-color: #f6e05e; }
+        #yellow-attack { background-color: #d69e2e; } /* Darker Orange */
+        #yellow-attack.active { border-color: #f6e05e; }
+        #blue-attack { background-color: #2b6cb0; } /* Darker Blue */
+        #blue-attack.active { border-color: #f6e05e; }
+
+        .hp-display, .energy-display {
+            font-size: 0.5rem;
+            font-weight: bold;
+            color: #e2e8f0;
+        }
+        .hp-bar-container {
+            width: 100%;
+            background-color: #4a5568;
+            border-radius: 4px;
+            height: 6px;
+            overflow: hidden;
+        }
+        .hp-bar {
+            height: 100%;
+            background-color: #ef4444;
+            border-radius: 4px;
+            transition: width 0.3s ease-out;
+        }
+        .energy-bar-container {
+            width: 100%;
+            background-color: #4a5568;
+            border-radius: 4px;
+            height: 4px;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+        .energy-bar {
+            height: 100%;
+            background-color: #48bb78;
+            border-radius: 4px;
+            transition: width 0.3s ease-out;
         }
 
-        /* モーダルオーバーレイのスタイル */
-        .modal-overlay {
+        #reset-button {
+            background-color: #9b2c2c;
+            margin-top: 20px;
+            padding: 10px 20px;
+        }
+        #reset-button:hover:not(:disabled) {
+            background-color: #7b1e1e;
+        }
+
+        #game-over-panel {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7); /* 暗いオーバーレイ */
+            background-color: rgba(0, 0, 0, 0.85);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000; /* 最前面に表示 */
-            opacity: 0; /* 初期状態では非表示 */
-            visibility: hidden; /* 初期状態では非表示 */
-            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; /* フェードイン/アウト */
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s ease-in-out;
         }
-        .modal-overlay.show {
-            opacity: 1; /* 表示時に不透明 */
-            visibility: visible; /* 表示時に可視 */
+        #game-over-panel.active {
+            visibility: visible;
+            opacity: 1;
         }
-        /* モーダルコンテンツのスタイル */
-        .modal-content {
-            background-color: #2d3748; /* ダークな背景色 */
-            color: #e2e8f0;
-            padding: 2rem;
-            border-radius: 1rem;
+        .panel-content {
+            background-color: #2d3748;
+            padding: 30px;
+            border-radius: 16px;
             text-align: center;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
-            transform: scale(0.9); /* 表示時に拡大アニメーション */
-            transition: transform 0.3s ease-in-out;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transform: scale(0.9);
+            transition: transform 0.3s ease-out;
+            color: #e2e8f0;
         }
-        .modal-overlay.show .modal-content {
-            transform: scale(1); /* 表示時に元のサイズに */
+        #game-over-panel.active .panel-content {
+            transform: scale(1);
         }
-        /* h2のfont-sizeとmargin-bottomはJSで動的に設定されるため、ここでは削除 */
-        .modal-content button {
-            background-color: #4299e1; /* 青色 */
+        .panel-content h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #e2e8f0;
+        }
+        .panel-content button {
+            background-color: #4299e1;
             color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.75rem;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1rem;
             font-weight: bold;
-            border: none;
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
+            transition: background-color 0.2s, transform 0.1s;
+            border: none;
         }
-        .modal-content button:hover {
+        .panel-content button:hover {
             background-color: #3182ce;
+            transform: translateY(-2px);
         }
 
-        /* ステージ選択パネルのスタイル */
-        #stageSelectModal .modal-content {
-            /* max-heightとwidthはJSで動的に設定されるため、ここでは削除 */
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem; /* ボタン間のスペース */
-            padding: 1rem; /* コンテンツのパディングを維持 */
-            box-sizing: border-box; /* パディングを幅/高さに含める */
-        }
-        /* ステージ選択パネルのタイトルを小さくする */
-        /* font-sizeとmargin-bottomはJSで動的に設定されるため、ここでは削除 */
-        #stageSelectModal .modal-content h2 {
-            /* font-size and margin-bottom are set dynamically in JS */
-        }
-        /* ステージボタンを囲むスクロール可能な枠 */
-        #stageSelectModal #stageButtonsFrame {
-            /* height, flex-grow, min-heightはJSで動的に設定されるため、ここでは削除 */
-            overflow-y: auto; /* スクロール可能にする */
-            border: 1px solid #ecc94b; /* 黄色に変更し、ショートハンドで指定 */
-            border-radius: 0.5rem; /* 枠の角を丸くする */
-            padding: 0.5rem; /* 枠の内側のパディング */
-            background-color: #1a202c; /* 枠の背景色 */
-            box-sizing: border-box; /* Ensure padding is included in height */
-        }
-        /* スクロール枠内のボタンコンテナ */
-        #stageButtonsContainer {
-            display: flex;
-            flex-direction: row; /* ボタンを横に並べる */
-            flex-wrap: wrap; /* ボタンを折り返す */
-            justify-content: flex-start; /* 左寄せ */
-            gap: 0.5rem; /* ボタン間のスペース */
-        }
-        .stage-button {
-            background-color: #6366f1; /* デフォルトのステージボタン色 (Indigo 500) */
-            color: white;
-            /* widthとheightはJSで動的に設定されるため、ここでは削除 */
-            padding: 0; /* 幅と高さを固定するためパディングを削除 */
-            border-radius: 0.5rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
-            text-align: center;
-            display: flex; /* テキストを中央に配置するため */
-            justify-content: center; /* テキストを中央に配置するため */
-            align-items: center; /* テキストを中央に配置するため */
-            font-size: 0.875rem; /* ボタン内のテキストサイズを調整 */
-            flex-shrink: 0; /* ボタンが縮まないようにする */
-        }
-        .stage-button:hover {
-            background-color: #4f46e5; /* ホバー時の色 (Indigo 600) */
-        }
-        .stage-button.current-stage {
-            background-color: #ef4444; /* 現在のステージボタン色 (Red 500) */
-            border: 2px solid #f87171; /* 枠線を追加 */
-        }
-        .stage-button.current-stage:hover {
-            background-color: #dc2626; /* ホバー時の色 (Red 600) */
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #main-content-area {
+                flex-direction: column;
+                align-items: center;
+            }
+            #left-column, #right-control-panel {
+                width: 100%; /* Full width on smaller screens */
+                max-width: 374px; /* Ensure canvas doesn't stretch too wide on small screens */
+            }
+            .direction-buttons, .attack-buttons {
+                flex-direction: row; /* Horizontal on smaller screens */
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .attack-button {
+                flex: 1 1 auto;
+                min-width: 80px;
+                height: 60px;
+            }
+            .attack-button span.text-3xl {
+                font-size: 2.5rem;
+            }
+            #game-container {
+                padding: 12px;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="gameWrapper">
-        <h1 class="text-3xl font-bold mb-6">あみだくじゲーム</h1>
-        <div id="canvasAndHintContainer">
-            <canvas id="amidakujiCanvas"></canvas>
-            <button id="hintButton" class="game-button">HINT</button>
-        </div>
-        <div class="button-container">
-            <button id="stageButton" class="game-button">Stage</button>
-            <button id="goButton" class="game-button">Go!</button>
-            <button id="resetButton" class="game-button">リセット</button>
-        </div>
-    </div>
+    <div id="game-container" class="flex flex-col items-center">
+        <h1 class="text-xl font-bold text-gray-300 text-center" style="margin-bottom: 2px;">ターン制RPGゲーム</h1>
 
-    <div id="resultModal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 id="resultText"></h2>
-            <button id="modalResetButton">リセット</button>
-        </div>
-    </div>
+        <div id="main-content-area">
+            <div id="left-column">
+                <div id="canvas-wrapper">
+                    <canvas id="gameCanvas"></canvas>
+                </div>
 
-    <div id="stageSelectModal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 id="stageSelectTitle" class="text-2xl mb-4">ステージ選択</h2>
-            <div id="stageButtonsFrame">
-                <div id="stageButtonsContainer">
+                <div class="boss-hp-panel flex flex-col items-start w-full" style="margin-bottom: 1px;">
+                    <span class="hp-display" style="margin-bottom: 2px;">ボスHP: <span id="boss-hp-value"></span></span>
+                    <div class="hp-bar-container w-full" style="margin-top: 1px;">
+                        <div id="boss-hp-bar" class="hp-bar"></div>
                     </div>
+                </div>
             </div>
+
+            <div id="right-control-panel">
+                <div class="player-hp-panel flex flex-col items-center w-full" style="margin-bottom: 1px;">
+                    <span class="hp-display" style="margin-bottom: 2px;">プレイヤーHP: <span id="player-hp-value"></span></span>
+                    <div class="hp-bar-container w-full" style="margin-top: 1px;">
+                        <div id="player-hp-bar" class="hp-bar"></div>
+                    </div>
+                </div>
+
+                <div class="attack-buttons w-full">
+                    <button id="red-attack" class="game-button attack-button w-full h-20 mb-2 px-4">
+                        <span class="text-3xl flex-shrink-0">🍁</span>
+                        <div class="flex flex-col items-start justify-center flex-grow ml-2">
+                            <span class="text-xs">消費E:全て</span>
+                            <span class="text-xs">ダメージ: <span id="red-attack-damage"></span></span>
+                            <span id="red-energy" class="text-xxs">残E:15</span>
+                        </div>
+                    </button>
+                    <button id="yellow-attack" class="game-button attack-button w-full h-20 mb-2 px-4">
+                        <span class="text-3xl flex-shrink-0">🍌</span>
+                        <div class="flex flex-col items-start justify-center flex-grow ml-2">
+                            <span class="text-xs">消費E:3</span>
+                            <span class="text-xs">ダメージ: <span id="yellow-attack-damage"></span></span>
+                            <span id="yellow-energy" class="text-xxs">残E:15</span>
+                        </div>
+                    </button>
+                    <button id="blue-attack" class="game-button attack-button w-full h-20 px-4">
+                        <span class="text-3xl flex-shrink-0">🧊</span>
+                        <div class="flex flex-col items-start justify-center flex-grow ml-2">
+                            <span class="text-xs">消費E:2</span>
+                            <span class="text-xs">ダメージ: <span id="blue-attack-damage"></span></span>
+                            <span id="blue-energy" class="text-xxs">残E:6</span>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="direction-buttons mt-4">
+                    <div class="flex flex-col items-center">
+                        <button id="move-up" class="game-button w-[34px] h-[34px] text-xl rounded-full">▲</button>
+                        <div class="flex">
+                            <button id="move-left" class="game-button w-[34px] h-[34px] text-xl rounded-full">◀</button>
+                            <div class="w-[34px] h-[34px]"></div>
+                            <button id="move-right" class="game-button w-[34px] h-[34px] text-xl rounded-full">▶</button>
+                        </div>
+                        <button id="move-down" class="game-button w-[34px] h-[34px] text-xl rounded-full">▼</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button id="reset-button" class="game-button px-6 py-2 mt-8 w-full max-w-[600px]">リセット</button>
+    </div>
+
+    <div id="game-over-panel" class="hidden">
+        <div class="panel-content">
+            <h2 id="game-result-text"></h2>
+            <button id="restart-button">もう一度プレイ</button>
         </div>
     </div>
 
     <script>
-        // Constants and global variables
-        const LINE_COUNT = 4; // Number of vertical lines (A, B, C, D)
-        const POINT_COUNT_PER_LINE = 9; // Number of points on each vertical line
-        // LINE_SPACING_X と LINE_START_Y は動的に計算されるため、ここでは固定値ではない
-        let MARK_SPEED = 5; // Mark movement speed (pixels/frame)
-        let MARK_FONT_SIZE = 30; // Mark font size (動的に計算される)
-        let LINE_START_Y = 50; // LINE_START_Yをletに変更し、初期値を設定
+        // Canvas and Context
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-        // Define symbolic names for horizontal connection points (point indices)
-        const P1 = 0; // Point index 0
-        const P2 = 1; // Point index 1
-        const P3 = 2; // Point index 2
-        const P4 = 3; // Point index 3
-        const P5 = 4; // Point index 4
-        const P6 = 5; // Point index 5
-        const P7 = 6; // Point index 6
-        const P8 = 7; // Point index 7
-        const P9 = 8; // Point index 8
+        // Game Constants
+        const FIELD_SIZE = 25; // 25x25マス
+        const VIEW_SIZE = 11;   // 11x11マスが映し出される
+        const TILE_SIZE = 34;  // 各マスのサイズ (px)
+        const CANVAS_WIDTH = TILE_SIZE * VIEW_SIZE;
+        const CANVAS_HEIGHT = TILE_SIZE * VIEW_SIZE;
 
-        // Define symbolic names and fixed connection points for each horizontal line.
-        // These objects do NOT contain pattern information, only the fixed geometry.
-        const H_LINE_A1_B1 = { fromLine: 0, fromPoint: P1, toLine: 1, toPoint: P1 };
-        const H_LINE_A3_B3 = { fromLine: 0, fromPoint: P3, toLine: 1, toPoint: P3 };
-        const H_LINE_A4_B4 = { fromLine: 0, fromPoint: P4, toLine: 1, toPoint: P4 };
-        const H_LINE_A6_B6 = { fromLine: 0, fromPoint: P6, toLine: 1, toPoint: P6 };
-        const H_LINE_A7_B7 = { fromLine: 0, fromPoint: P7, toLine: 1, toPoint: P7 };
-        const H_LINE_A9_B9 = { fromLine: 0, fromPoint: P9, toLine: 1, toPoint: P9 };
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
 
-        const H_LINE_B2_C2 = { fromLine: 1, fromPoint: P2, toLine: 2, toPoint: P2 };
-        const H_LINE_B5_C5 = { fromLine: 1, fromPoint: P5, toLine: 2, toPoint: P5 };
-        const H_LINE_B8_C8 = { fromLine: 1, fromPoint: P8, toLine: 2, toPoint: P8 };
+        // Game State Variables
+        let player;
+        let enemies;
+        let boss;
+        let field;
+        let activeAttackType = null; // 'red', 'yellow', 'blue'
+        let damageDisplays = []; // { x, y, amount, color, startTime }
+        let isPlayerTurn = true; // プレイヤーのターンかどうか
+        let isMoving = false; // 移動中かどうか
+        let lastMoveDirection = null; // 最後の移動方向を保持
 
-        const H_LINE_C1_D1 = { fromLine: 2, fromPoint: P1, toLine: 3, toPoint: P1 };
-        const H_LINE_C3_D3 = { fromLine: 2, fromPoint: P3, toLine: 3, toPoint: P3 };
-        const H_LINE_C4_D4 = { fromLine: 2, fromPoint: P4, toLine: 3, toPoint: P4 };
-        const H_LINE_C6_D6 = { fromLine: 2, fromPoint: P6, toLine: 3, toPoint: P6 };
-        const H_LINE_C7_D7 = { fromLine: 2, fromPoint: P7, toLine: 3, toPoint: P7 };
-        const H_LINE_C9_D9 = { fromLine: 2, fromPoint: P9, toLine: 3, toPoint: P9 };
+        // UI Elements
+        const moveUpBtn = document.getElementById('move-up');
+        const moveDownBtn = document.getElementById('move-down');
+        const moveLeftBtn = document.getElementById('move-left');
+        const moveRightBtn = document.getElementById('move-right');
+        const redAttackBtn = document.getElementById('red-attack');
+        const yellowAttackBtn = document.getElementById('yellow-attack');
+        const blueAttackBtn = document.getElementById('blue-attack');
+        const resetBtn = document.getElementById('reset-button');
+        const playerHpValue = document.getElementById('player-hp-value');
+        const playerHpBar = document.getElementById('player-hp-bar');
+        const bossHpValue = document.getElementById('boss-hp-value');
+        const bossHpBar = document.getElementById('boss-hp-bar');
+        const redEnergyDisplay = document.getElementById('red-energy');
+        const yellowEnergyDisplay = document.getElementById('yellow-energy');
+        const blueEnergyDisplay = document.getElementById('blue-energy');
+        const gameOverPanel = document.getElementById('game-over-panel');
+        const gameResultText = document.getElementById('game-result-text');
+        const restartButton = document.getElementById('restart-button');
+
+        // New UI Elements for damage display
+        const redAttackDamage = document.getElementById('red-attack-damage');
+        const yellowAttackDamage = document.getElementById('yellow-attack-damage');
+        const blueAttackDamage = document.getElementById('blue-attack-damage');
 
 
-        // Mapping of start marks to corresponding end marks (fixed mapping)
-        const MARK_TARGET_MAP = {
-            '⭐️': '🌟',
-            '💔': '❤️',
-            '☘️': '🌱',
-            '💠': '💎',
-            '🍎': '🍏',
-            '🍌': '🍋',
-            '🍇': '🫐',
-            '🍊': '🍑',
-            '🐶': '🐕',
-            '🐱': '🐈',
-            '🐭': '🐁',
-            '🐹': '🐹',
-            '☀️': '🌞',
-            '☁️': '⛅',
-            '🌧️': '☔',
-            '⚡': '🌩️',
-            '⚽': '🥅',
-            '🏀': ' hoop',
-            '🏈': ' touchdown',
-            '⚾': ' home run',
-            '💡': '✨',
-            '🔑': '🗝️',
-            '🔗': '⛓️',
-            '🔒': '🔓',
-            '⬆️': '⏫',
-            '⬇️': '⏬',
-            '⬅️': '⏪',
-            '➡️': '⏩'
+        // Player Data
+        const PLAYER_MAX_HP = 100;
+        const PLAYER_INITIAL_ENERGY = {
+            red: 15,
+            yellow: 15,
+            blue: 6
         };
 
-        // Colors for the 12 areas (3 new colors added)
-        const AREA_COLORS = [
-            '#FF6347', '#4682B4', '#32CD32', // Row 1: Tomato, SteelBlue, LimeGreen
-            '#FFD700', '#DA70D6', '#00CED1', // Row 2: Gold, Orchid, DarkTurquoise
-            '#FF4500', '#8A2BE2', '#ADFF2F',  // Row 3: OrangeRed, BlueViolet, GreenYellow
-            '#FFB6C1', '#87CEEB', '#98FB98'   // New Row: LightPink, SkyBlue, PaleGreen
-        ];
-
-        // Game Presets Array
-        // Each element in this array represents a complete game configuration.
-        const GAME_PRESETS = [
-            {
-                // Preset 0: Current game configuration (Initial)
-                startMarks: ['⭐️', '', '', '💠'], // 2番目と3番目のマークをダミー（空文字列）に設定
-                endMarks: ['🌟', '❤️', '🌱', '💎'],
-                horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A3_B3, patterns: { p1: 'n', p2: 'a' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_C1_D1, patterns: { p1: 'l', p2: 'a' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'r', p2: 'a' } },
-                    { line: H_LINE_C4_D4, patterns: { p1: 'r', p2: 'a' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'r', p2: 'a' } },
-                    { line: H_LINE_C7_D7, patterns: { p1: 'r', p2: 'a' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'r', p2: 'a' } }
-                ],
-                areaOnStates: [
-                    true, true, false, // Original 9 areas
-                    true, true, false,
-                    false, true, true,
-                    true, true, true  // New 3 areas (Area 9, 10, 11)
-                ],
-                // HINTS for preset 0: area 0 to p2, area 5 to p1
-                hints: [[0, 'p2'], [5, 'p1']]
+        // Attack Data
+        const ATTACKS = {
+            red: {
+                name: '🍁',
+                target: ['red', 'boss'],
+                power: (energy) => energy * 5, // 消費E1につき5
+                range: 2, // 半径2マス
+                cost: (currentEnergy) => currentEnergy, // 全て消費
+                maxEnergy: 15,
+                charge: (defeatedEnemies) => 1 + defeatedEnemies // ターン終了時1E回復 + 倒した敵1体につき1E回復
             },
-            {
-                // Preset 1: More active lines, different area states
-                startMarks: ['🍎', '🍌', '🍇', '🍊'],
-                endMarks: ['🍏', '🍋', '🫐', '🍑'],
-                horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'n', p2: 'a' } },
-                    { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'n', p2: 'a' } },
-                    { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_B2_C2, patterns: { p1: 'n', p2: 'a' } },
-                    { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'n', p2: 'a' } },
-
-                    { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'l' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'a', p2: 'r' } },
-                    { line: H_LINE_C4_D4, patterns: { p1: 'n', p2: 'a' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'l' } },
-                    { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'r' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'n', p2: 'a' } }
-                ],
-                areaOnStates: [
-                    true, false, true,
-                    false, true, true,
-                    true, false, true,
-                    false, true, false // New 3 areas
-                ],
-                // HINTS for preset 1: area 1 to p2, area 7 to p1
-                hints: [[1, 'p2'], [7, 'p1']]
+            yellow: {
+                name: '🍌',
+                target: ['yellow', 'boss'],
+                power: 15,
+                range: 3, // 半径3マス
+                cost: 3,
+                maxEnergy: 15,
+                charge: (damaged) => 1 + (damaged ? 1 : 0) // ターン終了時1E回復 + ダメージを受けた場合追加で1E回復
             },
-            {
-                // Preset 2: Fewer active lines, different area states
-                startMarks: ['🐶', '🐱', '🐭', '🐹'],
-                endMarks: ['🐕', '🐈', '🐁', '🐹'], // Note: Hamster stays hamster
-                horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A3_B3, patterns: { p1: 'n', p2: 'n' } }, // Always off
-                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A6_B6, patterns: { p1: 'n', p2: 'n' } }, // Always off
-                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A9_B9, patterns: { p1: 'n', p2: 'n' } }, // Always off
-
-                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B5_C5, patterns: { p1: 'n', p2: 'n' } }, // Always off
-                    { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'n', p2: 'n' } }, // Always off
-                    { line: H_LINE_C4_D4, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'n', p2: 'n' } }, // Always off
-                    { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'n', p2: 'n' } }  // Always off
-                ],
-                areaOnStates: [
-                    false, true, false,
-                    true, false, true,
-                    false, true, false,
-                    true, false, true // New 3 areas
-                ],
-                hints: [[3, 'p2']] // HINTS for preset 2: area 3 to p2
-            },
-            {
-                // Preset 3: Complex patterns, all areas on
-                startMarks: ['☀️', '☁️', '🌧️', '⚡'],
-                endMarks: ['🌞', '⛅', '☔', '🌩️'],
-                horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'l', p2: 'r' } },
-                    { line: H_LINE_A3_B3, patterns: { p1: 'r', p2: 'l' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A6_B6, patterns: { p1: 'l', p2: 'a' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'r', p2: 'a' } },
-                    { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'l' } },
-                    { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'r' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'n', p2: 'a' } },
-
-                    { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'l', p2: 'r' } },
-                    { line: H_LINE_C4_D4, patterns: { p1: 'r', p2: 'l' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C7_D7, patterns: { p1: 'l', p2: 'a' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'r', p2: 'a' } }  // Reversed
-                ],
-                areaOnStates: [
-                    true, true, true,
-                    true, true, true,
-                    true, true, true,
-                    true, true, true // New 3 areas
-                ],
-                hints: [] // No hints for preset 3
-            },
-            {
-                // Preset 4: All lines active, some areas off
-                startMarks: ['⚽', '🏀', '🏈', '⚾'],
-                endMarks: ['🥅', ' hoop', ' touchdown', ' home run'],
-                horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'a' } },
-
-                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'a' } },
-
-                    { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_C4_D4, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'a', p2: 'a' } }
-                ],
-                areaOnStates: [
-                    true, true, false,
-                    true, false, true,
-                    false, true, true,
-                    true, false, true // New 3 areas
-                ],
-                hints: [] // No hints for preset 4
-            },
-            {
-                // Preset 5: Sparse connections, mixed area states
-                startMarks: ['💡', '🔑', '🔗', '🔒'],
-                endMarks: ['✨', '🗝️', '⛓️', '🔓'],
-                horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_C3_D3, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'a', p2: 'n' } }
-                ],
-                areaOnStates: [
-                    true, false, false,
-                    false, true, false,
-                    false, false, true,
-                    true, true, false // New 3 areas
-                ],
-                hints: [] // No hints for preset 5
-            },
-            {
-                // Preset 6: Reversed patterns for some lines, all areas on
-                startMarks: ['⬆️', '⬇️', '⬅️', '➡️'],
-                endMarks: ['⏫', '⏬', '⏪', '⏩'],
-                horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'n', p2: 'a' } }, // Reversed
-                    { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'n', p2: 'a' } }, // Reversed
-                    { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'n', p2: 'a' } }, // Reversed
-                    { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_B2_C2, patterns: { p1: 'n', p2: 'a' } }, // Reversed
-                    { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'n', p2: 'a' } }, // Reversed
-
-                    { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'l' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'r', p2: 'a' } }, // Reversed
-                    { line: H_LINE_C4_D4, patterns: { p1: 'a', p2: 'r' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'l', p2: 'a' } }, // Reversed
-                    { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'l' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'r', p2: 'a' } }  // Reversed
-                ],
-                areaOnStates: [
-                    true, true, true,
-                    true, true, true,
-                    true, true, true,
-                    true, true, true // New 3 areas
-                ],
-                hints: [] // No hints for preset 6
+            blue: {
+                name: '🧊',
+                target: ['blue', 'boss'],
+                power: (targets) => 5 + targets * 2, // 5 + 攻撃対象1体につき追加で2
+                range: 4, // 半径4マス
+                cost: 2,
+                maxEnergy: 6,
+                charge: () => 1 // 移動を行ったターンの終了時に1回復
             }
-        ];
+        };
 
+        // Enemy Data
+        const ENEMY_TYPES = {
+            red: { hp: 20, detectRange: 1, color: 'red', char: '🔴' }, // 半径1マス
+            yellow: { hp: 30, detectRange: 2, color: 'yellow', char: '🟡' }, // 半径2マス
+            blue: { hp: 10, detectRange: 3, color: 'blue', char: '🔵' } // 半径3マス
+        };
 
-        // Get DOM elements
-        const canvas = document.getElementById('amidakujiCanvas');
-        const ctx = canvas.getContext('2d');
-        const goButton = document.getElementById('goButton');
-        const resetButton = document.getElementById('resetButton');
-        const stageButton = document.getElementById('stageButton'); // New Stage button
-        const hintButton = document.getElementById('hintButton'); // New HINT button
-        const resultModal = document.getElementById('resultModal');
-        const resultText = document.getElementById('resultText');
-        const modalResetButton = document.getElementById('modalResetButton');
-        const stageSelectModal = document.getElementById('stageSelectModal'); // Stage selection modal
-        const stageButtonsFrame = document.getElementById('stageButtonsFrame'); // New: Frame for scrollable buttons
-        const stageButtonsContainer = document.getElementById('stageButtonsContainer'); // Container for stage buttons
-        const gameWrapper = document.getElementById('gameWrapper'); // gameWrapper要素を取得
-        const stageSelectTitle = document.getElementById('stageSelectTitle'); // ステージ選択タイトル要素を取得
+        // Boss Data
+        const BOSS_MAX_HP = 200;
+        const BOSS_DETECT_RANGE = 3; // 半径3マス
+        const BOSS_HEAL_AMOUNT = 5;
 
-        // Game state variables
-        let verticalLineX = []; // X-coordinates of each vertical line
-        let pointY = []; // Y-coordinates of each point
-        let ladderMap = {}; // Map for efficient horizontal connection lookup
-        let marks = []; // Array of mark objects
-        let isGameRunning = false; // Flag indicating if the game is running
-        let finishedMarksCount = 0; // Number of marks that have reached their end point
-        let gameResult = null; // Game result ('clear', 'fail', null)
-        let animationFrameId = null; // requestAnimationFrame ID
-        let isHintActive = false; // Flag for hint display state
-        // Global variable to store patterns that were changed by hint
-        let originalPatternsBeforeHint = [];
+        // Utility Functions
+        function getDistance(p1, p2) {
+            return Math.max(Math.abs(p1.x - p2.x), Math.abs(p1.y - p2.y));
+        }
 
-        // Mutable array for horizontal connections, including current active pattern
-        let allHorizontalConnections = [];
+        function isWithinRange(source, target, range) {
+            return getDistance(source, target) <= range;
+        }
 
-        // Array of area objects
-        let areas = [];
-
-        // Global variables to hold current game settings from the loaded preset
-        let currentStartMarks = [];
-        let currentEndMarks = [];
-        let currentStageIndex = 0; // Keep track of the current active stage preset
-
-        /**
-         * Converts a hex color to an RGBA string.
-         * @param {string} hex - The hex color string (e.g., '#RRGGBB' or '#RGB').
-         * @param {number} alpha - The alpha transparency value (0 to 1).
-         * @returns {string} - The RGBA color string.
-         */
-        function hexToRgba(hex, alpha) {
-            let r = 0, g = 0, b = 0;
-            // Handle #RRGGBB or #RGB
-            if (hex.length === 7) { // #RRGGBB
-                r = parseInt(hex.substring(1, 3), 16);
-                g = parseInt(hex.substring(3, 5), 16);
-                b = parseInt(hex.substring(5, 7), 16);
-            } else if (hex.length === 4) { // #RGB
-                r = parseInt(hex[1] + hex[1], 16);
-                g = parseInt(hex[2] + hex[2], 16);
-                b = parseInt(hex[3] + hex[3], 16);
-            }
-            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
         /**
-         * Helper function to check if a click/touch coordinate is within a rectangle.
-         * @param {number} x - X-coordinate of the click/touch.
-         * @param {number} y - Y-coordinate of the click/touch.
-         * @param {object} rect - Rectangle object ({x, y, width, height}).
-         * @returns {boolean} - True if within the rectangle, false otherwise.
+         * 円と矩形が交差するかどうかを判定します。
+         * @param {number} circleX 円の中心のフィールドX座標 (タイル単位)
+         * @param {number} circleY 円の中心のフィールドY座標 (タイル単位)
+         * @param {number} circleRadiusTiles 円の半径 (タイル単位)
+         * @param {number} rectX 矩形の左上隅のフィールドX座標 (タイル単位)
+         * @param {number} rectY 矩形の左上隅のフィールドY座標 (タイル単位)
+         * @param {number} rectWidthTiles 矩形の幅 (タイル単位)
+         * @param {number} rectHeightTiles 矩形の高さ (タイル単位)
+         * @returns {boolean} 交差していれば true、そうでなければ false
          */
-        function isPointInRect(x, y, rect) {
-            return x >= rect.x && x <= rect.x + rect.width &&
-                   y >= rect.y && y <= rect.y + rect.height;
-        }
+        function isCircleIntersectingRect(circleX, circleY, circleRadiusTiles, rectX, rectY, rectWidthTiles, rectHeightTiles) {
+            // 円と矩形の座標をピクセル単位に変換
+            const circlePxX = circleX * TILE_SIZE + TILE_SIZE / 2;
+            const circlePxY = circleY * TILE_SIZE + TILE_SIZE / 2;
+            const circlePxRadius = (circleRadiusTiles + 0.5) * TILE_SIZE; // drawCircleRangeと同じ半径計算
 
-        /**
-         * Calculates coordinates for vertical lines and points, and sets initial position and size for the area.
-         */
-        function setupCoordinates() {
-            verticalLineX = [];
-            pointY = [];
+            const rectPxX = rectX * TILE_SIZE;
+            const rectPxY = rectY * TILE_SIZE;
+            const rectPxWidth = rectWidthTiles * TILE_SIZE;
+            const rectPxHeight = rectHeightTiles * TILE_SIZE;
 
-            // Make LINE_SPACING_X dynamic based on canvas width
-            const horizontalMarginRatio = 0.15; // キャンバス幅の15%を左右マージンとする
-            const effectiveCanvasWidth = canvas.width * (1 - 2 * horizontalMarginRatio);
-            const dynamicLineSpacingX = effectiveCanvasWidth / (LINE_COUNT - 1); // 線間の間隔
+            // 円の中心から矩形の最も近い点を探索
+            let testX = circlePxX;
+            let testY = circlePxY;
 
-            const startX = canvas.width * horizontalMarginRatio; // 計算された左マージンから開始
-            for (let i = 0; i < LINE_COUNT; i++) {
-                verticalLineX.push(startX + i * dynamicLineSpacingX);
+            if (circlePxX < rectPxX) {
+                testX = rectPxX;
+            } else if (circlePxX > rectPxX + rectPxWidth) {
+                testX = rectPxX + rectPxWidth;
             }
 
-            // Make LINE_START_Y dynamic based on canvas height
-            const verticalMarginRatio = 0.1; // キャンバス高さの10%を上下マージンとする
-            const dynamicLineStartY = canvas.height * verticalMarginRatio;
-            LINE_START_Y = dynamicLineStartY; // グローバル変数LINE_START_Yを更新
-
-            const effectiveLineHeight = canvas.height * (1 - 2 * verticalMarginRatio);
-
-            // Calculate Y-coordinate for point 1 (index 0) (10% from the top of the effective line height)
-            const firstPointY = LINE_START_Y + (effectiveLineHeight * 0.1);
-
-            // Calculate Y-coordinate for point 9 (index 8) (10% from the bottom of the effective line height)
-            const lastPointY = (canvas.height - LINE_START_Y) - (effectiveLineHeight * 0.1);
-
-            // Dynamically calculate vertical spacing between points
-            const dynamicPointSpacingY = (lastPointY - firstPointY) / (POINT_COUNT_PER_LINE - 1);
-
-            // Calculate Y-coordinates for each point
-            for (let i = 0; i < POINT_COUNT_PER_LINE; i++) {
-                pointY.push(firstPointY + i * dynamicPointSpacingY);
+            if (circlePxY < rectPxY) {
+                testY = rectPxY;
+            } else if (circlePxY > rectPxY + rectPxHeight) {
+                testY = rectPxY + rectPxHeight;
             }
 
-            // Define area width (same for all areas) - also needs to be dynamic
-            const areaWidth = dynamicLineSpacingX * 1.2; // 線間の間隔より少し大きくする
+            // 最も近い点と円の中心との距離を計算
+            const distX = circlePxX - testX;
+            const distY = circlePxY - testY;
+            const distance = Math.sqrt((distX * distX) + (distY * distY));
 
-            // 縦線の有効な高さの80%をエリアの配置に使う
-            const eightyPercentLineHeight = effectiveLineHeight * 0.8;
-
-            // 小エリアの高さは、縦線の80%を3等分にした高さ
-            const smallAreaHeight = eightyPercentLineHeight / 3;
-
-            // 大エリアの高さは小エリアの2倍
-            const largeAreaHeight = smallAreaHeight * 2;
-
-            // 各セクション間の垂直マージン (小エリアの高さに基づいて調整)
-            const areaVerticalMargin = smallAreaHeight * 0.1; // 小エリアの高さの10%をマージンとする
-
-            // 各セクションの基準Y座標
-            const baseY_section1 = LINE_START_Y + areaVerticalMargin;
-            const baseY_section2 = baseY_section1 + smallAreaHeight + areaVerticalMargin;
-            const baseY_section3 = baseY_section1 + (smallAreaHeight + areaVerticalMargin) * 2; // Corrected to be based on section1
-            // const baseY_section3 = baseY_section2 + smallAreaHeight + areaVerticalMargin; // Original, less accurate
-
-            // 大エリアの開始Y座標を、小エリアの2段目の開始Y座標に設定
-            // これにより、大エリアが小エリアの2段目と3段目の範囲をカバーする
-            const baseY_section4 = baseY_section2;
-
-            // Define base X coordinates for areas, centered over the gaps between vertical lines
-            const baseX_AB_center = (verticalLineX[0] + verticalLineX[1]) / 2 - (areaWidth / 2);
-            const baseX_BC_center = (verticalLineX[1] + verticalLineX[2]) / 2 - (areaWidth / 2);
-            const baseX_CD_center = (verticalLineX[2] + verticalLineX[3]) / 2 - (areaWidth / 2);
-
-
-            areas = [
-                // Section 1 (Small areas - 3 areas)
-                { x: baseX_AB_center, y: baseY_section1, width: areaWidth, height: smallAreaHeight },
-                { x: baseX_BC_center + areaWidth * 0.1, y: baseY_section1 + smallAreaHeight * 0.1, width: areaWidth, height: smallAreaHeight },
-                { x: baseX_CD_center, y: baseY_section1 - smallAreaHeight * 0.05, width: areaWidth, height: smallAreaHeight },
-
-                // Section 2 (Small areas - 3 areas)
-                { x: baseX_AB_center + areaWidth * 0.05, y: baseY_section2 - smallAreaHeight * 0.05, width: areaWidth, height: smallAreaHeight },
-                { x: baseX_BC_center, y: baseY_section2 + smallAreaHeight * 0.05, width: areaWidth, height: smallAreaHeight },
-                { x: baseX_CD_center - areaWidth * 0.05, y: baseY_section2, width: areaWidth, height: smallAreaHeight },
-
-                // Section 3 (Small areas - 3 areas)
-                { x: baseX_AB_center, y: baseY_section3 + smallAreaHeight * 0.05, width: areaWidth, height: smallAreaHeight },
-                { x: baseX_BC_center + areaWidth * 0.05, y: baseY_section3 - smallAreaHeight * 0.05, width: areaWidth, height: smallAreaHeight },
-                { x: baseX_CD_center, y: baseY_section3 + smallAreaHeight * 0.05, width: areaWidth, height: smallAreaHeight },
-
-                // Section 4 (Large areas - 3 areas)
-                { x: baseX_AB_center, y: baseY_section4, width: areaWidth, height: largeAreaHeight },
-                { x: baseX_BC_center + areaWidth * 0.1, y: baseY_section4 + largeAreaHeight * 0.1, width: areaWidth, height: largeAreaHeight },
-                { x: baseX_CD_center, y: baseY_section4 - largeAreaHeight * 0.05, width: areaWidth, height: largeAreaHeight }
-            ].map((pos, index) => ({
-                x: pos.x,
-                y: pos.y,
-                width: pos.width,
-                height: pos.height,
-                isSelected: false,
-                associatedLines: [],
-                color: AREA_COLORS[index],
-                isOn: false // Default to false, will be set by initializeGameData
-            }));
-
-            // Update MARK_FONT_SIZE based on canvas height to maintain proportionality
-            MARK_FONT_SIZE = canvas.height * 0.05; // キャンバス高さの約5%
+            // 距離が半径以下であれば交差している
+            return distance <= circlePxRadius;
         }
 
-        /**
-         * Associates horizontal lines with a specific area.
-         * Only horizontal lines whose center is within the targetArea are associated, regardless of their 'active' status.
-         * @param {object} targetArea - The area object to associate lines with.
-         */
-        function associateHorizontalLinesWithArea(targetArea) {
-            targetArea.associatedLines = []; // Clear existing associations for this specific area
 
-            allHorizontalConnections.forEach(conn => { // Iterate over all connections
-                // Get the attribute for the current pattern (even if 'n' for association)
-                const attribute = conn.patterns[conn.currentActivePattern];
+        // Game Initialization
+        function initGame() {
+            player = {
+                hp: PLAYER_MAX_HP,
+                x: Math.floor(FIELD_SIZE / 2),
+                y: Math.floor(FIELD_SIZE / 2),
+                energy: { ...PLAYER_INITIAL_ENERGY }
+            };
 
-                const x1 = verticalLineX[conn.fromLine];
-                const y1 = pointY[conn.fromPoint];
-                const x2 = verticalLineX[conn.toLine];
-                const midX = (x1 + x2) / 2;
-                const midY = y1; // Or y2, since they are the same for horizontal lines
+            boss = {
+                hp: BOSS_MAX_HP,
+                x: -1, y: -1, // Will be set randomly
+                detectRange: BOSS_DETECT_RANGE,
+                maxHp: BOSS_MAX_HP
+            };
 
-                // Check if the midpoint of the horizontal line is within the targetArea's bounds
-                // Non-active lines are now also associated
-                if (isPointInRect(midX, midY, targetArea)) {
-                    targetArea.associatedLines.push({
-                        fromLine: conn.fromLine,
-                        fromPoint: conn.fromPoint,
-                        toLine: conn.toLine,
-                        toPoint: conn.toPoint,
-                        midX: midX,
-                        midY: midY,
-                        attribute: attribute, // Store the attribute of the associated line
-                        originalConnection: conn // Store a reference to the original connection object in allHorizontalConnections
-                    });
-                }
-            });
-            console.log(`Associated horizontal lines with area at (${targetArea.x.toFixed(0)}, ${targetArea.y.toFixed(0)}):`, targetArea.associatedLines);
-        }
+            enemies = [];
+            field = Array(FIELD_SIZE).fill(0).map(() => Array(FIELD_SIZE).fill(0)); // 0: empty, 1: player, 2: enemy, 3: boss
 
-        /**
-         * Handles click/touch events on the canvas.
-         * @param {Event} event - The event object.
-         */
-        function handleCanvasClick(event) {
-            // Do nothing if the game is running or stage select is open
-            if (isGameRunning || stageSelectModal.classList.contains('show')) return;
+            damageDisplays = [];
+            activeAttackType = null; // Reset active attack
+            isPlayerTurn = true;
+            isMoving = false;
+            lastMoveDirection = null;
 
-            const rect = canvas.getBoundingClientRect();
-            let clientX, clientY;
+            // Place player
+            field[player.y][player.x] = 1;
 
-            // Differentiate coordinate acquisition for touch and click events
-            if (event.type === 'touchstart') {
-                clientX = event.touches[0].clientX;
-                clientY = event.touches[0].clientY;
-            } else { // 'click'
-                clientX = event.clientX;
-                clientY = event.clientY;
-            }
-
-            // Calculate relative coordinates within the canvas
-            const mouseX = clientX - rect.left;
-            const mouseY = clientY - rect.top;
-
-            let clickedOnActiveArea = false; // Flag to check if an 'on' area was clicked
-            // Check if any area was clicked
-            for (let i = 0; i < areas.length; i++) {
-                const currentArea = areas[i];
-                // If hint is active and this is a hint area, it's not clickable
-                const isCurrentAreaHint = GAME_PRESETS[currentStageIndex].hints.some(hint => hint[0] === i);
-                if (isHintActive && isCurrentAreaHint) {
-                    continue; // Skip processing clicks on hidden hint areas
-                }
-
-                if (isPointInRect(mouseX, mouseY, currentArea)) {
-                    if (currentArea.isOn) { // Only proceed if the area is 'on'
-                        clickedOnActiveArea = true;
-                        if (currentArea.isSelected) {
-                            // This area was already selected, so toggle pattern for its associated lines
-                            currentArea.associatedLines.forEach(associatedLine => {
-                                const originalConn = associatedLine.originalConnection;
-                                originalConn.currentActivePattern = (originalConn.currentActivePattern === 'p1') ? 'p2' : 'p1';
-                            });
-
-                            // After pattern switch, deselect this area and all others
-                            areas.forEach(a => {
-                                a.isSelected = false;
-                                a.associatedLines = [];
-                            });
-                            initializeLadderMap(); // Rebuild ladder map with new patterns
-                        } else {
-                            // This area was not selected, so select it. Deselect all other areas first.
-                            areas.forEach(a => {
-                                a.isSelected = false;
-                                a.associatedLines = [];
-                            });
-                            currentArea.isSelected = true;
-                            associateHorizontalLinesWithArea(currentArea); // Associate lines with this specific area
-                        }
-                        break; // Only one area can be clicked at a time (first one found if overlapping)
-                    }
+            // Place boss randomly, ensuring it's not on player's initial spot
+            let bossPlaced = false;
+            while (!bossPlaced) {
+                const bx = getRandomInt(0, FIELD_SIZE - 1);
+                const by = getRandomInt(0, FIELD_SIZE - 1);
+                if (field[by][bx] === 0) {
+                    boss.x = bx;
+                    boss.y = by;
+                    field[by][bx] = 3;
+                    bossPlaced = true;
                 }
             }
 
-            if (!clickedOnActiveArea) { // Check the new flag
-                // Clicked outside any active area, deselect all areas
-                areas.forEach(a => {
-                    a.isSelected = false;
-                    a.associatedLines = [];
-                });
-            }
-            drawGame(); // Update drawing
-        }
-
-        /**
-         * Adjusts canvas size and recalculates line and point coordinates.
-         */
-        function resizeCanvas() {
-            const overallAspectRatio = 4 / 3; // ゲーム全体の目標アスペクト比
-            const marginRatio = 0.9; // 画面の90%を使用
-
-            const availableWidth = window.innerWidth * marginRatio;
-            const availableHeight = window.innerHeight * marginRatio;
-
-            let wrapperWidth, wrapperHeight;
-
-            // gameWrapperのサイズをアスペクト比を維持しつつ計算
-            if (availableWidth / availableHeight > overallAspectRatio) {
-                wrapperHeight = availableHeight;
-                wrapperWidth = wrapperHeight * overallAspectRatio;
-            } else {
-                wrapperWidth = availableWidth;
-                wrapperHeight = wrapperWidth / overallAspectRatio;
-            }
-
-            // gameWrapperのCSSサイズを設定
-            gameWrapper.style.width = `${wrapperWidth}px`;
-            gameWrapper.style.height = `${wrapperHeight}px`;
-
-            // タイトルとボタンの高さの概算 (remをpxに変換)
-            // h1 (text-3xl: 30px) + mb-6 (24px) = 54px
-            // button-container (padding: 0.75rem*2 + font-size) + gap (1rem)
-            // Tailwindのremは通常16pxベース
-            const titleHeightEstimate = 54; // h1の高さとマージン
-            const buttonHeightEstimate = (0.75 * 16 * 2) + (16 * 1) + (1.5 * 16); // ボタンのパディング、フォントサイズ、ボタンコンテナのマージンボトム
-            const wrapperPadding = 2 * 16; // gameWrapperの上下パディング (1rem * 2)
-
-            // キャンバスが利用できる高さと幅を計算
-            // HINTボタンの幅も考慮に入れる
-            const canvasAvailableHeight = wrapperHeight - titleHeightEstimate - buttonHeightEstimate - wrapperPadding;
-            // HINTボタンの幅はcanvasの高さに依存するため、ここでは仮の値を使い、後で正確な値を設定する
-            const canvasAvailableWidth = wrapperWidth - wrapperPadding - 50 - 16; // 仮のHINTボタン幅50pxとギャップ1rem(16px)を引く
-
-            // キャンバスの内部アスペクト比 (描画内容に合わせて調整)
-            const canvasInternalAspectRatio = 4 / 3; // キャンバス内の描画も4:3を維持すると仮定
-
-            let currentCanvasWidth, currentCanvasHeight;
-
-            if (canvasAvailableWidth / canvasAvailableHeight > canvasInternalAspectRatio) {
-                currentCanvasHeight = canvasAvailableHeight;
-                currentCanvasWidth = currentCanvasHeight * canvasInternalAspectRatio;
-            } else {
-                currentCanvasWidth = canvasAvailableWidth;
-                currentCanvasHeight = currentCanvasWidth / canvasInternalAspectRatio;
-            }
-
-            // キャンバスのサイズを更新
-            canvas.width = currentCanvasWidth;
-            canvas.height = currentCanvasHeight;
-
-            // メインのゲームボタン（HINT, Stage, Go!, Reset）のサイズをキャンバスの高さの1/10の正方形に合わせる。ただし最大50pxまで。
-            const buttonSize = Math.min(currentCanvasHeight / 10, 50); // 共通のボタンサイズ
-
-            // HINTボタンのスタイル設定
-            hintButton.style.width = `${buttonSize}px`; // 幅を高さに合わせる
-            hintButton.style.height = `${buttonSize}px`;
-            hintButton.style.borderRadius = `${buttonSize * 0.1}px`; // 角丸も調整 (例として10%)
-            hintButton.style.fontSize = `${buttonSize / 2}px`; // フォントサイズを高さの1/2に設定
-
-            // Stage, Go!, Resetボタンも同様の高さに調整
-            stageButton.style.height = `${buttonSize}px`;
-            goButton.style.height = `${buttonSize}px`;
-            resetButton.style.height = `${buttonSize}px`;
-
-            // ボタンのパディングを調整してテキストが中央に表示されるようにする
-            // 現在のフォントサイズを取得
-            const currentFontSize = parseFloat(getComputedStyle(stageButton).fontSize);
-            const buttonPaddingY = (buttonSize - currentFontSize) / 2;
-            stageButton.style.paddingTop = `${buttonPaddingY}px`;
-            stageButton.style.paddingBottom = `${buttonPaddingY}px`;
-            goButton.style.paddingTop = `${buttonPaddingY}px`;
-            goButton.style.paddingBottom = `${buttonPaddingY}px`;
-            resetButton.style.paddingTop = `${buttonPaddingY}px`;
-            resetButton.style.paddingBottom = `${buttonPaddingY}px`;
-            // 幅はテキストの長さに応じて自動調整されるようにpaddingLeft/Rightはそのまま
-
-            // ステージ選択パネルの高さと幅を調整
-            let stageSelectModalHeight = Math.min(currentCanvasHeight * 3 / 4, 270);
-            let stageSelectModalWidth = stageSelectModalHeight * (3 / 2); // 縦:横が2:3なので、横は縦の1.5倍
-
-            const stageSelectModalContent = document.querySelector('#stageSelectModal .modal-content');
-            if (stageSelectModalContent) {
-                stageSelectModalContent.style.maxHeight = `${stageSelectModalHeight}px`;
-                stageSelectModalContent.style.width = `${stageSelectModalWidth}px`;
-            }
-
-            // 「ステージ選択」の文字のフォントサイズとマージンを調整
-            const stageSelectTitleFontSize = stageSelectModalHeight / 18; // 1/18に変更
-            const stageSelectTitleMarginBottom = stageSelectTitleFontSize / 4;
-
-            if (stageSelectTitle) {
-                stageSelectTitle.style.fontSize = `${stageSelectTitleFontSize}px`;
-                stageSelectTitle.style.marginBottom = `${stageSelectTitleMarginBottom}px`;
-            }
-
-            // ステージボタン枠の高さ計算
-            // modal-contentのpadding: 1rem (上下で32px)
-            // h2のfont-sizeとmargin-bottomは動的に計算されたものを使用
-            const stageButtonsFrameHeight = stageSelectModalHeight - (16 * 2) - stageSelectTitleFontSize - stageSelectTitleMarginBottom;
-            const stageButtonsFrame = document.getElementById('stageButtonsFrame');
-            if (stageButtonsFrame) {
-                stageButtonsFrame.style.height = `${stageButtonsFrameHeight}px`;
-                // flex-growとmin-heightをautoに設定して、明示的な高さが適用されるようにする
-                stageButtonsFrame.style.flexGrow = '0';
-                stageButtonsFrame.style.minHeight = 'auto';
-            }
-
-            setupCoordinates(); // 座標とエリアを再計算
-            initializeLadderMap(); // 現在のパターンでラダーマップを再初期化
-            drawGame(); // ゲームを再描画
-        }
-
-        /**
-         * Initializes the game's horizontal connection data and area on states from a preset.
-         * Creates a deep copy of the selected preset's horizontal connections and sets initial active patterns.
-         * @param {number} presetIndex - The index of the preset to load from GAME_PRESETS.
-         */
-        function initializeGameData(presetIndex = 0) {
-            const selectedPreset = GAME_PRESETS[presetIndex];
-
-            // Set global start and end marks based on the preset
-            currentStartMarks = selectedPreset.startMarks;
-            currentEndMarks = selectedPreset.endMarks;
-            currentStageIndex = presetIndex; // Update current stage index
-
-            // Initialize allHorizontalConnections based on the preset's definitions
-            allHorizontalConnections = selectedPreset.horizontalConnections.map(presetConn => {
-                // Create a new object combining the fixed line geometry and the preset's patterns
-                const newConn = { ...presetConn.line, patterns: JSON.parse(JSON.stringify(presetConn.patterns)) };
-                newConn.currentActivePattern = 'p1'; // Set initial active pattern for each line
-                return newConn;
-            });
-
-            // Set area 'isOn' states based on the preset
-            selectedPreset.areaOnStates.forEach((isOnState, index) => {
-                if (areas[index]) {
-                    areas[index].isOn = isOnState;
-                }
-            });
-
-            // Reset hint state and clear stored patterns when game data is initialized
-            isHintActive = false;
-            hintButton.classList.remove('active');
-            originalPatternsBeforeHint = [];
-
-            initializeLadderMap(); // Build the ladder map based on this initialized data
-        }
-
-        /**
-         * Initializes the map for efficient horizontal connection lookup based on the current pattern for each line.
-         */
-        function initializeLadderMap() {
-            ladderMap = {};
-            // Create map entries for each vertical line
-            for (let i = 0; i < LINE_COUNT; i++) {
-                ladderMap[i] = {};
-            }
-
-            allHorizontalConnections.forEach(conn => {
-                const attribute = conn.patterns[conn.currentActivePattern]; // Get attribute based on current active pattern
-
-                // Connection from fromLine to toLine
-                ladderMap[conn.fromLine][conn.fromPoint] = {
-                    targetLine: conn.toLine,
-                    targetPoint: conn.toPoint,
-                    attribute: attribute // Add attribute
-                };
-                // Reverse connection from toLine to fromLine (if a mark comes from the opposite direction)
-                ladderMap[conn.toLine][conn.toPoint] = {
-                    targetLine: conn.fromLine,
-                    targetPoint: conn.fromPoint,
-                    attribute: attribute // Add attribute
-                };
-            });
-        }
-
-        /**
-         * Toggles the hint display and applies/reverts hint patterns.
-         */
-        function toggleHint() {
-            isHintActive = !isHintActive;
-            hintButton.classList.toggle('active', isHintActive);
-
-            const currentHints = GAME_PRESETS[currentStageIndex].hints;
-
-            if (isHintActive) {
-                // HINT ON: Store original patterns and apply hint patterns
-                originalPatternsBeforeHint = []; // Clear previous state before populating
-
-                currentHints.forEach(([areaIndex, targetPattern]) => {
-                    const area = areas[areaIndex];
-                    if (area && area.isOn) { // Only process if the area exists and is 'on'
-                        // Iterate through all horizontal connections to find those within the hint area
-                        allHorizontalConnections.forEach(conn => {
-                            const x1 = verticalLineX[conn.fromLine];
-                            const y1 = pointY[conn.fromPoint];
-                            const x2 = verticalLineX[conn.toLine];
-                            const midX = (x1 + x2) / 2;
-                            const midY = y1;
-
-                            if (isPointInRect(midX, midY, area)) {
-                                // This connection is within the hint area
-                                // Only store if the pattern is actually changing to avoid unnecessary entries
-                                if (conn.currentActivePattern !== targetPattern) {
-                                    originalPatternsBeforeHint.push({
-                                        connection: conn,
-                                        originalPattern: conn.currentActivePattern // Store the current pattern
-                                    });
-                                    conn.currentActivePattern = targetPattern; // Apply the hint pattern
-                                }
-                            }
+            // Place enemies randomly
+            const numEnemies = getRandomInt(10, 20);
+            for (let i = 0; i < numEnemies; i++) {
+                let enemyPlaced = false;
+                while (!enemyPlaced) {
+                    const ex = getRandomInt(0, FIELD_SIZE - 1);
+                    const ey = getRandomInt(0, FIELD_SIZE - 1);
+                    if (field[ey][ex] === 0) {
+                        const types = Object.keys(ENEMY_TYPES);
+                        const randomType = types[getRandomInt(0, types.length - 1)];
+                        enemies.push({
+                            type: randomType,
+                            hp: ENEMY_TYPES[randomType].hp,
+                            x: ex,
+                            y: ey,
+                            detectRange: ENEMY_TYPES[randomType].detectRange,
+                            color: ENEMY_TYPES[randomType].color,
+                            char: ENEMY_TYPES[randomType].char,
+                            maxHp: ENEMY_TYPES[randomType].hp // Store max HP for rendering
                         });
+                        field[ey][ex] = 2;
+                        enemyPlaced = true;
                     }
-                });
-            } else {
-                // HINT OFF: Restore original patterns
-                originalPatternsBeforeHint.forEach(item => {
-                    item.connection.currentActivePattern = item.originalPattern;
-                });
-                originalPatternsBeforeHint = []; // Clear stored patterns after restoring
+                }
             }
 
-            initializeLadderMap(); // Rebuild ladder map with new/restored patterns
-            drawGame(); // Redraw game
+            // Hide game over panel
+            gameOverPanel.classList.remove('active');
+            gameOverPanel.classList.add('hidden');
+
+            updateUI();
+            drawGame();
         }
 
-        /**
-         * Draws the game elements on the canvas.
-         */
+        // Drawing Functions
         function drawGame() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-            // Draw vertical lines
-            ctx.strokeStyle = '#a0aec0'; // Line color (gray)
-            ctx.lineWidth = 2;
-            verticalLineX.forEach(x => {
-                ctx.beginPath();
-                ctx.moveTo(x, LINE_START_Y);
-                ctx.lineTo(x, canvas.height - LINE_START_Y);
-                ctx.stroke();
-            });
+            // Calculate view offset to center player
+            // Player should be at the center of the view: (VIEW_SIZE / 2 - 0.5) tiles from the top-left of the view
+            const startTileX = player.x - (VIEW_SIZE / 2 - 0.5);
+            const startTileY = player.y - (VIEW_SIZE / 2 - 0.5);
 
-            // Draw horizontal lines
-            ctx.lineWidth = 2;
-            // Iterate through ladderMap to draw horizontal lines
-            for (const fromLineIndex in ladderMap) {
-                for (const fromPointIndex in ladderMap[fromLineIndex]) {
-                    const connection = ladderMap[fromLineIndex][fromPointIndex];
-                    // Do not draw if non-active
-                    if (connection.attribute === 'n') continue;
+            // Draw grid
+            ctx.strokeStyle = '#4a5568'; // Darker gray for grid lines
+            ctx.lineWidth = 1;
 
-                    // Draw only if fromLineIndex is smaller than targetLineIndex to avoid duplicate drawing
-                    if (parseInt(fromLineIndex) < connection.targetLine) {
-                        const x1 = verticalLineX[fromLineIndex];
-                        const y1 = pointY[fromPointIndex];
-                        const x2 = verticalLineX[connection.targetLine];
-                        // For horizontal lines, y1 and y2 are the same
-                        const y2 = pointY[connection.targetPoint];
+            // Calculate the actual range of field tiles to draw
+            const drawStartX = Math.floor(startTileX);
+            const drawStartY = Math.floor(startTileY);
+            const drawEndX = Math.ceil(startTileX + VIEW_SIZE);
+            const drawEndY = Math.ceil(startTileY + VIEW_SIZE);
 
-                        // Set color based on attribute
-                        if (connection.attribute === 'l') {
-                            ctx.strokeStyle = 'skyblue'; // Left-only: Sky blue
-                        } else if (connection.attribute === 'r') {
-                            ctx.strokeStyle = 'pink'; // Right-only: Pink
-                        } else {
-                            ctx.strokeStyle = '#cbd5e0'; // Active (default): Light gray
-                        }
-
-                        ctx.beginPath();
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
-                        ctx.stroke();
+            for (let fieldY = drawStartY; fieldY < drawEndY; fieldY++) {
+                for (let fieldX = drawStartX; fieldX < drawEndX; fieldX++) {
+                    // Only draw grid lines for actual field tiles (0 to FIELD_SIZE-1)
+                    if (fieldX >= 0 && fieldX < FIELD_SIZE && fieldY >= 0 && fieldY < FIELD_SIZE) {
+                        const screenX = (fieldX - startTileX) * TILE_SIZE;
+                        const screenY = (fieldY - startTileY) * TILE_SIZE;
+                        ctx.strokeRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
                     }
                 }
             }
 
-            // Draw moving marks (drawn before the areas so they appear on top)
-            ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            marks.forEach(mark => {
-                ctx.fillText(mark.char, mark.x, mark.y);
-            });
-
-            // Draw areas
-            areas.forEach((currentArea, areaIndex) => {
-                // Check if hint is active and this area is a hint area for the current stage
-                const isCurrentAreaHint = GAME_PRESETS[currentStageIndex].hints.some(hint => hint[0] === areaIndex);
-
-                // If hint is active AND this is a hint area, then skip drawing this area
-                if (isHintActive && isCurrentAreaHint) {
-                    return;
-                }
-
-                if (!currentArea.isOn) return; // Only draw if the area is 'on'
-
+            /**
+             * 円形の範囲を描画します。
+             * @param {number} centerX 円の中心のキャンバスX座標 (px)
+             * @param {number} centerY 円の中心のキャンバスY座標 (px)
+             * @param {number} rangeInTiles 円の半径 (タイル単位)
+             * @param {string} color 描画色 (RGBA)
+             */
+            function drawCircleRange(centerX, centerY, rangeInTiles, color) {
+                // チェビシェフ距離内の全てのタイルを視覚的にカバーするように半径を調整
+                const radius = (rangeInTiles + 0.5) * TILE_SIZE;
                 ctx.beginPath();
-                ctx.rect(currentArea.x, currentArea.y, currentArea.width, currentArea.height);
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.closePath();
+            }
 
-                if (currentArea.isSelected) {
-                    ctx.fillStyle = hexToRgba(currentArea.color, 0.2); // Make color semi-transparent
-                    ctx.fill();
-                    ctx.strokeStyle = currentArea.color; // Use the solid color for border
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-                } else {
-                    ctx.strokeStyle = hexToRgba(currentArea.color, 0.5); // Set 50% opacity for non-selected border
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-                }
-            });
+            // ボスと敵の索敵範囲を描画
+            [boss, ...enemies].forEach(entity => {
+                if (!entity || entity.hp <= 0) return;
 
-            // Yellow "HINT" text is removed from here.
+                // 現在のキャンバスの表示範囲のフィールド座標
+                const visibleRectX = startTileX;
+                const visibleRectY = startTileY;
+                const visibleRectWidth = VIEW_SIZE;
+                const visibleRectHeight = VIEW_SIZE;
 
-            // Draw start marks
-            ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            currentStartMarks.forEach((markChar, index) => { // Use currentStartMarks
-                const x = verticalLineX[index];
-                const y = MARK_FONT_SIZE / 2; // Positioned at the top of the vertical line
-                ctx.fillText(markChar, x, y);
-                // Draw labels for each vertical line (A, B, C, D)
-                ctx.fillStyle = '#e2e8f0'; // Light text color
-                ctx.font = `${MARK_FONT_SIZE * 0.6}px 'Inter', sans-serif`;
-                ctx.fillText(String.fromCharCode(65 + index), x, y - MARK_FONT_SIZE * 0.7);
-            });
+                // エンティティの索敵範囲が可視領域と交差する場合のみ描画
+                if (isCircleIntersectingRect(entity.x, entity.y, entity.detectRange, visibleRectX, visibleRectY, visibleRectWidth, visibleRectHeight)) {
+                    const screenX = (entity.x - startTileX) * TILE_SIZE;
+                    const screenY = (entity.y - startTileY) * TILE_SIZE;
 
-            // Draw end marks
-            ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            currentEndMarks.forEach((markChar, index) => { // Use currentEndMarks
-                const x = verticalLineX[index];
-                const y = canvas.height - (MARK_FONT_SIZE / 2); // Positioned at the bottom of the vertical line
-                ctx.fillText(markChar, x, y);
-            });
-        }
-
-        /**
-         * Updates the position of each mark.
-         * @param {object} mark - The mark object to update.
-         */
-        function updateMarkPosition(mark) {
-            if (mark.state === 'finished') return; // Do not update marks that have finished
-
-            const currentLineX = verticalLineX[mark.currentLineIndex];
-
-            if (mark.state === 'moving_down') {
-                mark.y += MARK_SPEED; // Move downwards
-
-                // Check if the mark has reached the next point
-                if (mark.currentPointIndex + 1 < POINT_COUNT_PER_LINE && mark.y >= pointY[mark.currentPointIndex + 1]) {
-                    mark.currentPointIndex++; // Update point index
-                    mark.y = pointY[mark.currentPointIndex]; // Snap to the point's Y-coordinate
-
-                    // Check for a horizontal connection at this point
-                    const connection = ladderMap[mark.currentLineIndex][mark.currentPointIndex];
-                    if (connection && connection.attribute !== 'n') { // Only consider if not non-active
-                        const attribute = connection.attribute;
-                        const isMovingRight = connection.targetLine > mark.currentLineIndex; // Is the mark trying to move right from current line?
-
-                        let shouldChangePath = false;
-
-                        if (attribute === 'a') { // Active
-                            shouldChangePath = true;
-                        } else if (attribute === 'l') { // Left-only
-                            // Change path only if moving from right to left (from higher line index to lower line index)
-                            shouldChangePath = !isMovingRight;
-                        } else if (attribute === 'r') { // Right-only
-                            // Change path only if moving from left to right (from lower line index to higher line index)
-                            shouldChangePath = isMovingRight;
-                        }
-
-                        if (shouldChangePath) {
-                            mark.state = isMovingRight ? 'moving_horizontal_right' : 'moving_horizontal_left';
-                            mark.targetHorizontalLineIndex = connection.targetLine;
-                        }
-                        // else: continue moving down (state remains moving_down)
+                    let rangeColor = '';
+                    let range = 0;
+                    if (entity === boss) {
+                        rangeColor = 'rgba(245, 158, 11, 0.1)'; // 薄いオレンジ、半透明 (ボス)
+                        range = boss.detectRange;
+                    } else { // 敵
+                        rangeColor = 'rgba(239, 68, 68, 0.1)'; // 薄い赤、半透明 (敵)
+                        range = entity.detectRange;
                     }
+                    drawCircleRange(screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2, range, rangeColor);
                 }
+            });
 
-                // Check if the mark has reached the end of the vertical line
-                if (mark.y >= canvas.height - MARK_FONT_SIZE) { // ゴールのマークの少し上に停まるように調整
-                    mark.y = canvas.height - MARK_FONT_SIZE; // ゴールのマークの少し上に停まるように調整
-                    mark.state = 'finished'; // Set state to finished
-                    mark.finalLineIndex = mark.currentLineIndex; // Store the final vertical line index
-                    checkGameEnd(); // Check game end conditions
-                }
+            // プレイヤーのアクティブな攻撃範囲を描画
+            if (activeAttackType) {
+                const attackRange = ATTACKS[activeAttackType].range;
+                const visibleRectX = startTileX;
+                const visibleRectY = startTileY;
+                const visibleRectWidth = VIEW_SIZE;
+                const visibleRectHeight = VIEW_SIZE;
 
-            } else if (mark.state === 'moving_horizontal_right') {
-                mark.x += MARK_SPEED; // Move right
-                const targetX = verticalLineX[mark.targetHorizontalLineIndex];
-                // Check if the mark has reached the target vertical line
-                if (mark.x >= targetX) {
-                    mark.x = targetX; // Snap to the target X-coordinate
-                    mark.currentLineIndex = mark.targetHorizontalLineIndex; // Update current vertical line
-                    mark.state = 'moving_down'; // Change state back to moving downwards
-                }
-
-            } else if (mark.state === 'moving_horizontal_left') {
-                mark.x -= MARK_SPEED; // Move left
-                const targetX = verticalLineX[mark.targetHorizontalLineIndex];
-                // Check if the mark has reached the target vertical line
-                if (mark.x <= targetX) {
-                    mark.x = targetX; // Snap to the target X-coordinate
-                    mark.currentLineIndex = mark.targetHorizontalLineIndex; // Update current vertical line
-                    mark.state = 'moving_down'; // Change state back to moving downwards
+                // プレイヤーの攻撃範囲が可視領域と交差する場合のみ描画
+                if (isCircleIntersectingRect(player.x, player.y, attackRange, visibleRectX, visibleRectY, visibleRectWidth, visibleRectHeight)) {
+                    const screenX = (player.x - startTileX) * TILE_SIZE;
+                    const screenY = (player.y - startTileY) * TILE_SIZE;
+                    drawCircleRange(screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2, attackRange, 'rgba(66, 153, 225, 0.2)'); // 薄い青、半透明 (プレイヤー)
                 }
             }
+
+
+            // プレイヤー、敵、ボスを描画 (範囲の上に描画されるように)
+            [player, boss, ...enemies].forEach(entity => {
+                if (!entity || entity.hp <= 0) return;
+
+                // エンティティが現在のビュー内にいる場合のみ描画
+                const screenX = (entity.x - startTileX) * TILE_SIZE;
+                const screenY = (entity.y - startTileY) * TILE_SIZE;
+
+                if (screenX >= -TILE_SIZE && screenX < CANVAS_WIDTH + TILE_SIZE &&
+                    screenY >= -TILE_SIZE && screenY < CANVAS_HEIGHT + TILE_SIZE) {
+
+                    ctx.font = `${TILE_SIZE * 0.7}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#e2e8f0'; // キャラクターの明るい色
+
+                    let char = '';
+                    let hpBarColor = '';
+                    let hpBarWidth = 0;
+                    let currentHp = 0;
+                    let maxHp = 0;
+
+                    if (entity === player) {
+                        char = '👤';
+                        hpBarColor = '#48bb78'; // プレイヤーHPの緑
+                        currentHp = player.hp;
+                        maxHp = PLAYER_MAX_HP;
+                    } else if (entity === boss) {
+                        char = '👹';
+                        hpBarColor = '#ef4444'; // ボスHPの赤
+                        currentHp = boss.hp;
+                        maxHp = BOSS_MAX_HP;
+                    } else { // 敵
+                        char = entity.char;
+                        hpBarColor = '#f59e0b'; // 敵HPのオレンジ
+                        currentHp = entity.hp;
+                        maxHp = entity.maxHp;
+                    }
+
+                    ctx.fillText(char, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2 - 10);
+
+                    // エンティティのHPバーを描画
+                    ctx.fillStyle = '#4a5568'; // HPバーの背景 (暗い色)
+                    ctx.fillRect(screenX + TILE_SIZE * 0.1, screenY + TILE_SIZE * 0.8, TILE_SIZE * 0.8, 5);
+                    hpBarWidth = (currentHp / maxHp) * TILE_SIZE * 0.8;
+                    ctx.fillStyle = hpBarColor;
+                    ctx.fillRect(screenX + TILE_SIZE * 0.1, screenY + TILE_SIZE * 0.8, hpBarWidth, 5);
+
+                    // HP値をHPバーの右下に小さく表示
+                    ctx.font = 'bold 10px Arial'; // 小さいフォントサイズ
+                    ctx.fillStyle = '#e2e8f0'; // 明るいテキスト色
+                    ctx.textAlign = 'right'; // 右寄せ
+                    ctx.textBaseline = 'bottom'; // 下揃え
+                    ctx.fillText(`${currentHp}`, screenX + TILE_SIZE * 0.9, screenY + TILE_SIZE * 0.8 + 8); // HPバーの右下、少し下に調整
+                }
+            });
+
+            // ダメージ表示を描画
+            const currentTime = performance.now();
+            damageDisplays = damageDisplays.filter(d => currentTime - d.startTime < 500); // 0.5秒間表示
+
+            damageDisplays.forEach(d => {
+                const screenX = (d.x - startTileX) * TILE_SIZE;
+                const screenY = (d.y - startTileY) * TILE_SIZE;
+
+                if (screenX >= -TILE_SIZE && screenX < CANVAS_WIDTH + TILE_SIZE &&
+                    screenY >= -TILE_SIZE && screenY < CANVAS_HEIGHT + TILE_SIZE) {
+                    ctx.font = 'bold 16px Arial'; // Adjusted font size for damage text
+                    ctx.fillStyle = d.color;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText(d.amount, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2 - 10); /* Adjusted Y position */
+                }
+            });
+
+            requestAnimationFrame(drawGame);
         }
 
-        /**
-         * Game animation loop.
-         */
-        function animate() {
-            if (!isGameRunning) {
-                cancelAnimationFrame(animationFrameId); // Stop animation if the game is not running
+        function displayDamage(targetX, targetY, amount, color) {
+            damageDisplays.push({
+                x: targetX,
+                y: targetY,
+                amount: amount,
+                color: color,
+                startTime: performance.now()
+            });
+        }
+
+        // UI Update
+        function updateUI() {
+            playerHpValue.textContent = player.hp;
+            playerHpBar.style.width = `${(player.hp / PLAYER_MAX_HP) * 100}%`;
+            playerHpBar.style.backgroundColor = player.hp > PLAYER_MAX_HP / 4 ? '#48bb78' : '#ef4444'; // Green, then red when low
+
+            bossHpValue.textContent = boss.hp;
+            bossHpBar.style.width = `${(boss.hp / BOSS_MAX_HP) * 100}%`;
+            bossHpBar.style.backgroundColor = boss.hp > BOSS_MAX_HP / 4 ? '#ef4444' : '#f59e0b'; // Red, then orange when low
+
+            redEnergyDisplay.textContent = `残E:${player.energy.red}`;
+            yellowEnergyDisplay.textContent = `残E:${player.energy.yellow}`;
+            blueEnergyDisplay.textContent = `残E:${player.energy.blue}`;
+
+            // Update damage display for attack buttons
+            redAttackDamage.textContent = ATTACKS.red.power(player.energy.red);
+            yellowAttackDamage.textContent = ATTACKS.yellow.power;
+            blueAttackDamage.textContent = `${ATTACKS.blue.power(0)} (+対象数*2)`; // Base damage + scaling info
+
+
+            // Disable attack buttons if not enough energy
+            redAttackBtn.disabled = player.energy.red === 0;
+            yellowAttackBtn.disabled = player.energy.yellow < ATTACKS.yellow.cost;
+            blueAttackBtn.disabled = player.energy.blue < ATTACKS.blue.cost;
+
+            // Update active attack button styling
+            [redAttackBtn, yellowAttackBtn, blueAttackBtn].forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (activeAttackType === 'red') redAttackBtn.classList.add('active');
+            if (activeAttackType === 'yellow') yellowAttackBtn.classList.add('active');
+            if (activeAttackType === 'blue') blueAttackBtn.classList.add('active');
+
+            // Update movement button states
+            updateMovementButtons();
+        }
+
+        function updateMovementButtons() {
+            const canMoveUp = player.y > 0 && field[player.y - 1][player.x] === 0;
+            const canMoveDown = player.y < FIELD_SIZE - 1 && field[player.y + 1][player.x] === 0;
+            const canMoveLeft = player.x > 0 && field[player.y][player.x - 1] === 0;
+            const canMoveRight = player.x < FIELD_SIZE - 1 && field[player.y][player.x + 1] === 0;
+
+            moveUpBtn.disabled = !canMoveUp || !isPlayerTurn || isMoving;
+            moveDownBtn.disabled = !canMoveDown || !isPlayerTurn || isMoving;
+            moveLeftBtn.disabled = !canMoveLeft || !isPlayerTurn || isMoving;
+            moveRightBtn.disabled = !canMoveRight || !isPlayerTurn || isMoving;
+        }
+
+        // Game Logic
+        async function movePlayer(dx, dy) {
+            if (!isPlayerTurn || isMoving) return;
+
+            const newX = player.x + dx;
+            const newY = player.y + dy;
+
+            // Check boundaries and obstacles
+            if (newX < 0 || newX >= FIELD_SIZE || newY < 0 || newY >= FIELD_SIZE || field[newY][newX] !== 0) {
+                console.log("Invalid move: out of bounds or occupied.");
                 return;
             }
 
-            drawGame(); // Redraw the game
-            marks.forEach(updateMarkPosition); // Update position of each mark
+            isMoving = true;
+            updateMovementButtons(); // Disable movement buttons during move
 
-            animationFrameId = requestAnimationFrame(animate); // Request the next frame
+            // Clear old player position
+            field[player.y][player.x] = 0;
+            player.x = newX;
+            player.y = newY;
+            field[player.y][player.x] = 1;
+
+            drawGame(); // Redraw immediately after player moves
+
+            console.log(`Player moved to (${player.x}, ${player.y})`);
+
+            await performTurnActions();
+
+            isMoving = false;
+            updateMovementButtons(); // Re-enable movement buttons
         }
 
-        /**
-         * Checks game end conditions and displays the result.
-         */
-        function checkGameEnd() {
-            finishedMarksCount++;
-            // If all marks have reached their end point
-            if (finishedMarksCount === marks.length) {
-                let allMatch = true;
-                // Check if each mark's final destination matches its target mark
-                for (const mark of marks) {
-                    // ダミーマーク（空文字列）の場合は、クリア判定に影響しないようにスキップ
-                    if (mark.char === '') {
-                        continue;
+        async function performTurnActions() {
+            let playerDamagedThisTurn = false;
+            let enemiesDefeatedThisTurn = 0;
+
+            // 1. プレイヤーの攻撃
+            if (activeAttackType) {
+                console.log(`Player performing ${activeAttackType} attack.`);
+                const attack = ATTACKS[activeAttackType];
+                const targets = [];
+
+                // Find enemy targets
+                enemies.forEach(enemy => {
+                    if (enemy.hp > 0 && isWithinRange(player, enemy, attack.range) && attack.target.includes(enemy.type)) {
+                        targets.push(enemy);
                     }
-
-                    const actualEndMark = currentEndMarks[mark.finalLineIndex]; // Use currentEndMarks
-                    if (mark.targetEndMark !== actualEndMark) { // Compare with the target end mark stored in the mark object
-                        allMatch = false; // If not matching, it's a failure
-                        break;
-                    }
-                }
-
-                if (allMatch) {
-                    gameResult = 'clear';
-                    showResultPanel('クリア！'); // Show clear panel
-                } else {
-                    gameResult = 'fail';
-                    showResultPanel('失敗！'); // Show fail panel
-                }
-                isGameRunning = false; // Stop the game
-                goButton.disabled = true; // Disable Go! button
-            }
-        }
-
-        /**
-         * Displays the result panel.
-         * @param {string} message - Message to display on the panel.
-         */
-        function showResultPanel(message) {
-            resultText.textContent = message;
-            resultModal.classList.add('show'); // Add 'show' class to display
-        }
-
-        /**
-         * Hides the result panel.
-         */
-        function hideResultPanel() {
-            resultModal.classList.remove('show'); // Remove 'show' class to hide
-        }
-
-        /**
-         * Resets the game to its initial state, including resetting all horizontal line patterns to p1.
-         * This is for the main "Reset" button.
-         */
-        function resetGame() {
-            cancelAnimationFrame(animationFrameId); // Stop any running animation
-            isGameRunning = false;
-            finishedMarksCount = 0;
-            gameResult = null;
-            goButton.disabled = false; // Enable Go! button
-            hideResultPanel(); // Hide result panel
-            hideStageSelectionPanel(); // Hide stage selection panel if open
-
-            // Reset all areas' selection state and associated lines
-            areas.forEach(a => {
-                a.isSelected = false;
-                a.associatedLines = [];
-            });
-
-            // Re-initialize all game data to the first preset (p1 patterns, initial area states)
-            initializeGameData(0); // Load the first preset (this will also reset isHintActive and clear originalPatternsBeforeHint)
-
-            // Reset each mark to its initial position
-            marks = currentStartMarks.map((char, index) => ({ // Use currentStartMarks
-                id: String.fromCharCode(65 + index), // A, B, C, D
-                char: char,
-                x: verticalLineX[index],
-                y: MARK_FONT_SIZE / 2, // Initial Y-coordinate (top of vertical line)
-                originalX: verticalLineX[index],
-                originalY: MARK_FONT_SIZE / 2,
-                currentLineIndex: index,
-                currentPointIndex: -1, // Set before the first point
-                state: 'idle', // Initial state is idle
-                targetEndMark: MARK_TARGET_MAP[char], // Use MARK_TARGET_MAP here to get the intended end mark
-                finalLineIndex: -1,
-                reachedEnd: false
-            }));
-
-            drawGame(); // Redraw the game in the reset state
-        }
-
-        /**
-         * Resets the game state (marks, flags, etc.) but keeps the current horizontal line patterns.
-         * This is for the "Reset" button on the result panel and when opening stage select.
-         */
-        function softResetGame() {
-            cancelAnimationFrame(animationFrameId); // Stop any running animation
-            isGameRunning = false;
-            finishedMarksCount = 0;
-            gameResult = null;
-            goButton.disabled = false; // Enable Go! button
-            hideResultPanel(); // Hide result panel
-            // Do NOT hideStageSelectionPanel() here, as this function is called before showing it.
-
-            // Reset all areas' selection state and associated lines
-            areas.forEach(a => {
-                a.isSelected = false;
-                a.associatedLines = [];
-            });
-
-            // Do NOT call initializeGameData() here, so horizontal line patterns are preserved.
-            // ladderMap is already reflecting the current patterns from previous area clicks.
-
-            // Reset hint state and clear stored patterns when soft resetting
-            isHintActive = false;
-            hintButton.classList.remove('active');
-            originalPatternsBeforeHint = [];
-
-            // Reset each mark to its initial position
-            marks = currentStartMarks.map((char, index) => ({ // Use currentStartMarks
-                id: String.fromCharCode(65 + index), // A, B, C, D
-                char: char,
-                x: verticalLineX[index],
-                y: MARK_FONT_SIZE / 2, // Initial Y-coordinate (top of vertical line)
-                originalX: verticalLineX[index],
-                originalY: MARK_FONT_SIZE / 2,
-                currentLineIndex: index,
-                currentPointIndex: -1, // Set before the first point
-                state: 'idle', // Initial state is idle
-                targetEndMark: MARK_TARGET_MAP[char], // Use MARK_TARGET_MAP here to get the intended end mark
-                finalLineIndex: -1,
-                reachedEnd: false
-            }));
-
-            drawGame(); // Redraw the game in the reset state
-        }
-
-
-        /**
-         * Populates and displays the stage selection panel.
-         */
-        function showStageSelectionPanel() {
-            softResetGame(); // Reset game state but preserve patterns
-            stageButtonsContainer.innerHTML = ''; // Clear previous buttons
-
-            // Calculate stage button size based on the current modal height
-            const currentStageSelectModalContent = document.querySelector('#stageSelectModal .modal-content');
-            const currentStageSelectModalHeight = currentStageSelectModalContent ? parseFloat(currentStageSelectModalContent.style.maxHeight) : 270; // Fallback if not yet set
-            const stageButtonSize = currentStageSelectModalHeight / 5; // 1/5に変更
-
-            GAME_PRESETS.forEach((preset, index) => {
-                const button = document.createElement('button');
-                button.textContent = `Stage ${index + 1}`;
-                button.classList.add('stage-button');
-                button.style.width = `${stageButtonSize}px`; // Set width dynamically
-                button.style.height = `${stageButtonSize}px`; // Set height dynamically
-                if (index === currentStageIndex) {
-                    button.classList.add('current-stage');
-                }
-                button.addEventListener('click', () => handleStageButtonClick(index));
-                stageButtonsContainer.appendChild(button);
-            });
-
-            stageSelectModal.classList.add('show'); // Show the modal
-
-            // Center the current stage button in the scrollable view
-            const currentStageButtonElement = stageButtonsContainer.querySelector('.current-stage');
-            if (currentStageButtonElement) {
-                // Ensure layout is complete before attempting to scroll
-                requestAnimationFrame(() => {
-                    const containerHeight = stageButtonsFrame.clientHeight; // Use stageButtonsFrame for scrolling
-                    const buttonOffsetTop = currentStageButtonElement.offsetTop;
-                    const buttonHeight = currentStageButtonElement.offsetHeight;
-                    // Calculate scroll position to center the button
-                    stageButtonsFrame.scrollTop = buttonOffsetTop - (containerHeight / 2) + (buttonHeight / 2);
                 });
+
+                // Find boss target
+                if (boss.hp > 0 && isWithinRange(player, boss, attack.range) && attack.target.includes('boss')) {
+                    targets.push(boss);
+                }
+
+                if (targets.length > 0) {
+                    let damageAmount;
+                    if (activeAttackType === 'red') {
+                        damageAmount = attack.power(player.energy.red);
+                        player.energy.red = 0; // Consume all red energy
+                    } else if (activeAttackType === 'yellow') {
+                        damageAmount = attack.power;
+                        player.energy.yellow = Math.max(0, player.energy.yellow - attack.cost);
+                    } else if (activeAttackType === 'blue') {
+                        damageAmount = attack.power(targets.length);
+                        player.energy.blue = Math.max(0, player.energy.blue - attack.cost);
+                    }
+
+                    for (const target of targets) {
+                        target.hp = Math.max(0, target.hp - damageAmount);
+                        displayDamage(target.x, target.y, damageAmount, '#ef4444'); // Damage text (red)
+                        console.log(`${activeAttackType} attack hit ${target === boss ? 'Boss' : target.type} for ${damageAmount} damage. Remaining HP: ${target.hp}`);
+
+                        // Draw line from player to target
+                        drawLine(player, target, attack.color);
+                        await new Promise(resolve => setTimeout(resolve, 500)); // Show damage for 0.5s
+                        clearLine(); // Clear the line
+
+                        if (target.hp <= 0) {
+                            if (target === boss) {
+                                checkGameEnd();
+                                return; // Game ends
+                            } else {
+                                // Remove defeated enemy from field
+                                field[target.y][target.x] = 0;
+                                enemiesDefeatedThisTurn++;
+                                // 敵を倒すとプレイヤーのHPが30回復
+                                player.hp = Math.min(PLAYER_MAX_HP, player.hp + 30);
+                                console.log(`敵を倒した！プレイヤーHPが30回復しました。現在HP: ${player.hp}`);
+                            }
+                        }
+                    }
+                } else {
+                    console.log("No targets in range for player attack.");
+                }
+            } else {
+                console.log("No attack selected by player.");
+            }
+
+            // Remove defeated enemies from the array
+            enemies = enemies.filter(enemy => enemy.hp > 0);
+
+            // 2. 敵とボスの攻撃
+            let totalEnemyDamage = 0;
+            const attackingEntities = [];
+
+            // Enemies attack
+            enemies.forEach(enemy => {
+                if (enemy.hp > 0 && isWithinRange(enemy, player, enemy.detectRange)) {
+                    totalEnemyDamage += 5; // Assuming generic enemy attack power of 5
+                    attackingEntities.push(enemy);
+                    console.log(`${enemy.type} enemy attacks player.`);
+                }
+            });
+
+            // Boss attacks
+            if (boss.hp > 0 && isWithinRange(boss, player, boss.detectRange)) {
+                totalEnemyDamage += 10; // Assuming boss attack power of 10
+                attackingEntities.push(boss);
+                console.log(`Boss attacks player.`);
+            }
+
+            if (totalEnemyDamage > 0) {
+                player.hp = Math.max(0, player.hp - totalEnemyDamage);
+                displayDamage(player.x, player.y, totalEnemyDamage, '#ef4444'); // Damage text (red)
+                playerDamagedThisTurn = true;
+                console.log(`Player took ${totalEnemyDamage} damage. Remaining HP: ${player.hp}`);
+
+                // Draw lines from attacking entities to player
+                for (const attacker of attackingEntities) {
+                    drawLine(attacker, player, '#ef4444'); // Enemy/Boss attack lines are red
+                }
+                await new Promise(resolve => setTimeout(resolve, 500)); // Show damage for 0.5s
+                clearLine(); // Clear the lines
+            } else {
+                console.log("No enemies/boss in range to attack player.");
+            }
+
+            // 3. エネルギー回復
+            // Red energy
+            player.energy.red = Math.min(ATTACKS.red.maxEnergy, player.energy.red + ATTACKS.red.charge(enemiesDefeatedThisTurn));
+            // Yellow energy
+            player.energy.yellow = Math.min(ATTACKS.yellow.maxEnergy, player.energy.yellow + ATTACKS.yellow.charge(playerDamagedThisTurn));
+            // Blue energy (only if player moved this turn)
+            if (lastMoveDirection) { // Check if player actually moved
+                player.energy.blue = Math.min(ATTACKS.blue.maxEnergy, player.energy.blue + ATTACKS.blue.charge());
+            }
+
+            // Boss HP recovery
+            if (boss.hp > 0) {
+                boss.hp = Math.min(BOSS_MAX_HP, boss.hp + BOSS_HEAL_AMOUNT);
+                console.log(`Boss recovered 5 HP. Current HP: ${boss.hp}`);
+            }
+
+            lastMoveDirection = null; // Reset last move direction after turn
+
+            checkGameEnd();
+            updateUI();
+            drawGame();
+        }
+
+        function checkGameEnd() {
+            if (player.hp <= 0) {
+                showGameOverPanel('ゲームオーバー！');
+            } else if (boss.hp <= 0) {
+                showGameOverPanel('ゲームクリア！');
             }
         }
 
-        /**
-         * Hides the stage selection panel.
-         */
-        function hideStageSelectionPanel() {
-            stageSelectModal.classList.remove('show');
+        function showGameOverPanel(message) {
+            gameResultText.textContent = message;
+            gameOverPanel.classList.remove('hidden');
+            gameOverPanel.classList.add('active');
+            // Disable all game buttons
+            [moveUpBtn, moveDownBtn, moveLeftBtn, moveRightBtn, redAttackBtn, yellowAttackBtn, blueAttackBtn, resetBtn].forEach(btn => {
+                btn.disabled = true;
+            });
         }
 
-        /**
-         * Handles a click on a stage selection button.
-         * @param {number} index - The index of the selected stage preset.
-         */
-        function handleStageButtonClick(index) {
-            initializeGameData(index); // Load the selected preset (this will also reset isHintActive and clear originalPatternsBeforeHint)
-            softResetGame(); // Apply new preset settings and reset marks/game state
-            hideStageSelectionPanel(); // Close the panel
+        function drawLine(p1, p2, color) {
+            const viewCenterX = player.x;
+            const viewCenterY = player.y;
+
+            const startTileX = player.x - (VIEW_SIZE / 2 - 0.5); // Use the same logic as drawGame for consistent view
+            const startTileY = player.y - (VIEW_SIZE / 2 - 0.5); // Use the same logic as drawGame for consistent view
+
+            const screenX1 = (p1.x - startTileX) * TILE_SIZE + TILE_SIZE / 2;
+            const screenY1 = (p1.y - startTileY) * TILE_SIZE + TILE_SIZE / 2;
+            const screenX2 = (p2.x - startTileX) * TILE_SIZE + TILE_SIZE / 2;
+            const screenY2 = (p2.y - startTileY) * TILE_SIZE + TILE_SIZE / 2;
+
+            ctx.beginPath();
+            ctx.moveTo(screenX1, screenY1);
+            ctx.lineTo(screenX2, screenY2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.closePath();
         }
 
-        // Event listeners
-        goButton.addEventListener('click', () => {
-            if (!isGameRunning) {
-                isGameRunning = true;
-                goButton.disabled = true; // Disable Go! button
-                marks.forEach(mark => mark.state = 'moving_down'); // Set all marks to moving state
-                animate(); // Start animation
-            }
+        function clearLine() {
+            // Simply redraw the entire game to clear lines
+            drawGame();
+        }
+
+        // Event Listeners
+        moveUpBtn.addEventListener('click', () => { lastMoveDirection = 'up'; movePlayer(0, -1); });
+        moveDownBtn.addEventListener('click', () => { lastMoveDirection = 'down'; movePlayer(0, 1); });
+        moveLeftBtn.addEventListener('click', () => { lastMoveDirection = 'left'; movePlayer(-1, 0); });
+        moveRightBtn.addEventListener('click', () => { lastMoveDirection = 'right'; movePlayer(1, 0); });
+
+        redAttackBtn.addEventListener('click', () => {
+            activeAttackType = activeAttackType === 'red' ? null : 'red';
+            updateUI();
+        });
+        yellowAttackBtn.addEventListener('click', () => {
+            activeAttackType = activeAttackType === 'yellow' ? null : 'yellow';
+            updateUI();
+        });
+        blueAttackBtn.addEventListener('click', () => {
+            activeAttackType = activeAttackType === 'blue' ? null : 'blue';
+            updateUI();
         });
 
-        resetButton.addEventListener('click', resetGame);
-        modalResetButton.addEventListener('click', softResetGame);
-        stageButton.addEventListener('click', showStageSelectionPanel); // New stage button event listener
-        hintButton.addEventListener('click', toggleHint); // HINT button event listener now calls toggleHint
-
-        // Close stage select panel when clicking outside its content
-        stageSelectModal.addEventListener('click', (event) => {
-            if (event.target === stageSelectModal) { // Only close if clicking on the overlay itself, not the content
-                hideStageSelectionPanel();
-            }
+        resetBtn.addEventListener('click', () => {
+            initGame();
+            // Re-enable all game buttons
+            [moveUpBtn, moveDownBtn, moveLeftBtn, moveRightBtn, redAttackBtn, yellowAttackBtn, blueAttackBtn, resetBtn].forEach(btn => {
+                btn.disabled = false;
+            });
         });
 
-        // Window resize event and initial load event
-        window.addEventListener('resize', resizeCanvas);
-        window.onload = function () {
-            resizeCanvas(); // Initial resize and coordinate setup (includes area setup)
-            resetGame(); // This will call initializeGameData() for initial setup and reset marks/areas
-            canvas.addEventListener('click', handleCanvasClick);
-            canvas.addEventListener('touchstart', handleCanvasClick);
-        };
+        restartButton.addEventListener('click', () => {
+            initGame();
+            // Re-enable all game buttons
+            [moveUpBtn, moveDownBtn, moveLeftBtn, moveRightBtn, redAttackBtn, yellowAttackBtn, blueAttackBtn, resetBtn].forEach(btn => {
+                btn.disabled = false;
+            });
+        });
+
+        // Initial game setup
+        window.onload = initGame;
+
     </script>
 </body>
 </html>
