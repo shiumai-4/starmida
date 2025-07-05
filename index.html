@@ -17,7 +17,7 @@
             justify-content: center; /* gameWrapperを垂直方向に中央寄せ */
             min-height: 100vh; /* 画面いっぱいの高さ */
             margin: 0;
-            overflow: hidden; /* スクロールバーを非表示 */
+            overflow: auto; /* ★ 変更: コンテンツがはみ出た場合にスクロールバーを表示 */
         }
         /* ゲーム全体を囲むコンテナのスタイル */
         #gameWrapper {
@@ -30,6 +30,8 @@
             background-color: #2d3748; /* キャンバスの背景色に合わせるか、少し異なる色 */
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
             box-sizing: border-box; /* パディングを幅/高さに含める */
+            margin: 2rem 0; /* 上下にマージンを追加してスクロール時に見やすくする */
+            min-width: 720px; /* 横幅の最小値を720pxに設定 */
             /* 幅と高さはJavaScriptで設定されます */
         }
 
@@ -264,12 +266,12 @@
         const P1 = 0; // Point index 0
         const P2 = 1; // Point index 1
         const P3 = 2; // Point index 2
-        const P4 = 3; // Point index 3
-        const P5 = 4; // Point index 4
-        const P6 = 5; // Point index 5
-        const P7 = 6; // Point index 6
-        const P8 = 7; // Point index 7
-        const P9 = 8; // Point index 8
+        const P4 = 3; // Point index 4
+        const P5 = 4; // Point index 5
+        const P6 = 5; // Point index 6
+        const P7 = 6; // Point index 7
+        const P8 = 7; // Point index 8
+        const P9 = 8; // Point index 9
 
         // Define symbolic names and fixed connection points for each horizontal line.
         // These objects do NOT contain pattern information, only the fixed geometry.
@@ -591,6 +593,12 @@
         let currentEndMarks = [];
         let currentStageIndex = 0; // Keep track of the current active stage preset
 
+        // ★ 変更: 'l'と'r'属性の線を保持する配列と、星アニメーション用のタイマーID
+        let leftOnlyLines = [];
+        let rightOnlyLines = [];
+        let starAnimationInterval = null;
+
+
         /**
          * Converts a hex color to an RGBA string.
          * @param {string} hex - The hex color string (e.g., '#RRGGBB' or '#RGB').
@@ -842,10 +850,14 @@
          * Adjusts canvas size and recalculates line and point coordinates.
          */
         function resizeCanvas() {
+            // ★ 変更: レイアウト計算に使う画面幅の最小値を720pxに設定
+            const effectiveInnerWidth = Math.max(window.innerWidth, 720);
+
             const overallAspectRatio = 4 / 3; // ゲーム全体の目標アスペクト比
             const marginRatio = 0.9; // 画面の90%を使用
 
-            const availableWidth = window.innerWidth * marginRatio;
+            // ★ 変更: 実際の画面幅(window.innerWidth)の代わりに、計算上の有効幅(effectiveInnerWidth)を使用
+            const availableWidth = effectiveInnerWidth * marginRatio;
             const availableHeight = window.innerHeight * marginRatio;
 
             let wrapperWidth, wrapperHeight;
@@ -997,6 +1009,10 @@
          */
         function initializeLadderMap() {
             ladderMap = {};
+            // ★ 変更: leftOnlyLinesとrightOnlyLines配列をリセット
+            leftOnlyLines = [];
+            rightOnlyLines = []; // ★ 追加
+
             // Create map entries for each vertical line
             for (let i = 0; i < LINE_COUNT; i++) {
                 ladderMap[i] = {};
@@ -1004,6 +1020,29 @@
 
             allHorizontalConnections.forEach(conn => {
                 const attribute = conn.patterns[conn.currentActivePattern]; // Get attribute based on current active pattern
+
+                // ★ 変更: 属性が'l'または'r'の場合、それぞれの配列に情報を追加
+                if (attribute === 'l') {
+                    // 重複して描画しないように、インデックスが小さい方から大きい方への線のみを対象
+                    if (conn.fromLine < conn.toLine) {
+                        leftOnlyLines.push({
+                            fromLine: conn.fromLine,
+                            fromPoint: conn.fromPoint,
+                            toLine: conn.toLine,
+                            toPoint: conn.toPoint
+                        });
+                    }
+                } else if (attribute === 'r') { // ★ 追加
+                    // 重複して描画しないように、インデックスが小さい方から大きい方への線のみを対象
+                    if (conn.fromLine < conn.toLine) {
+                        rightOnlyLines.push({
+                            fromLine: conn.fromLine,
+                            fromPoint: conn.fromPoint,
+                            toLine: conn.toLine,
+                            toPoint: conn.toPoint
+                        });
+                    }
+                }
 
                 // Connection from fromLine to toLine
                 ladderMap[conn.fromLine][conn.fromPoint] = {
@@ -1103,14 +1142,8 @@
                         // For horizontal lines, y1 and y2 are the same
                         const y2 = pointY[connection.targetPoint];
 
-                        // Set color based on attribute
-                        if (connection.attribute === 'l') {
-                            ctx.strokeStyle = 'skyblue'; // Left-only: Sky blue
-                        } else if (connection.attribute === 'r') {
-                            ctx.strokeStyle = 'pink'; // Right-only: Pink
-                        } else {
-                            ctx.strokeStyle = '#cbd5e0'; // Active (default): Light gray
-                        }
+                        // ★ 変更: 'l'と'r'の場合もデフォルトの色(明るい灰色)で描画
+                        ctx.strokeStyle = '#cbd5e0'; // Active, Left-only, Right-only (default): Light gray
 
                         ctx.beginPath();
                         ctx.moveTo(x1, y1);
@@ -1180,6 +1213,57 @@
                 const x = verticalLineX[index];
                 const y = canvas.height - (MARK_FONT_SIZE / 2); // Positioned at the bottom of the vertical line
                 ctx.fillText(markChar, x, y);
+            });
+
+            // ★ 変更: 'l'と'r'属性の線の上に動く星を描画する処理全体を修正
+            const now = Date.now();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // 'l' (right to left)
+            leftOnlyLines.forEach(line => {
+                const x1 = verticalLineX[line.toLine]; // 右側のX座標 (始点)
+                const y1 = pointY[line.fromPoint];
+                const x2 = verticalLineX[line.fromLine]; // 左側のX座標 (終点)
+
+                const distance = x1 - x2;
+                const duration = distance * 25;
+                const progress = (now % duration) / duration;
+                
+                // ★ 追加: 進捗に応じてサイズを計算 (Sin波を利用)
+                const maxStarSize = MARK_FONT_SIZE * 0.6;
+                const minStarSize = MARK_FONT_SIZE * 0.2;
+                const scaleFactor = Math.sin(progress * Math.PI); // 0 -> 1 -> 0
+                const currentStarSize = minStarSize + (maxStarSize - minStarSize) * scaleFactor;
+                
+                const starX = x1 - (distance * progress);
+                const starY = y1;
+
+                ctx.font = `${currentStarSize}px "Segoe UI Emoji"`; // ★ 追加: 動的なフォントサイズ設定
+                ctx.fillText('✨', starX, starY);
+            });
+            
+            // 'r' (left to right)
+            rightOnlyLines.forEach(line => {
+                const x1 = verticalLineX[line.fromLine]; // 左側のX座標 (始点)
+                const y1 = pointY[line.fromPoint];
+                const x2 = verticalLineX[line.toLine]; // 右側のX座標 (終点)
+
+                const distance = x2 - x1;
+                const duration = distance * 25;
+                const progress = (now % duration) / duration;
+
+                // ★ 追加: 進捗に応じてサイズを計算 (Sin波を利用)
+                const maxStarSize = MARK_FONT_SIZE * 0.6;
+                const minStarSize = MARK_FONT_SIZE * 0.2;
+                const scaleFactor = Math.sin(progress * Math.PI); // 0 -> 1 -> 0
+                const currentStarSize = minStarSize + (maxStarSize - minStarSize) * scaleFactor;
+
+                const starX = x1 + (distance * progress);
+                const starY = y1;
+
+                ctx.font = `${currentStarSize}px "Segoe UI Emoji"`; // ★ 追加: 動的なフォントサイズ設定
+                ctx.fillText('✨', starX, starY);
             });
         }
 
@@ -1302,6 +1386,8 @@
                 }
                 isGameRunning = false; // Stop the game
                 goButton.disabled = true; // Disable Go! button
+                // ★ 追加: ゲーム終了後、星のアニメーションを再開
+                startStarAnimation();
             }
         }
 
@@ -1360,6 +1446,9 @@
             }));
 
             drawGame(); // Redraw the game in the reset state
+            
+            // ★ 追加: 星のアニメーションを開始/再開
+            startStarAnimation();
         }
 
         /**
@@ -1406,8 +1495,10 @@
             }));
 
             drawGame(); // Redraw the game in the reset state
-        }
 
+            // ★ 追加: 星のアニメーションを開始/再開
+            startStarAnimation();
+        }
 
         /**
          * Populates and displays the stage selection panel.
@@ -1467,9 +1558,32 @@
             hideStageSelectionPanel(); // Close the panel
         }
 
+        // ★ 追加: 星のアニメーションを開始する関数
+        function startStarAnimation() {
+            stopStarAnimation(); // 既存のアニメーションがあれば停止
+            starAnimationInterval = setInterval(() => {
+                // ゲーム実行中はanimate()が描画を担当するため、ここでは描画しない
+                if (!isGameRunning) {
+                    drawGame();
+                }
+            }, 1000 / 30); // 30fpsで描画
+        }
+
+        // ★ 追加: 星のアニメーションを停止する関数
+        function stopStarAnimation() {
+            if (starAnimationInterval) {
+                clearInterval(starAnimationInterval);
+                starAnimationInterval = null;
+            }
+        }
+
+
         // Event listeners
         goButton.addEventListener('click', () => {
             if (!isGameRunning) {
+                // ★ 追加: Go!ボタンを押したら星のアニメーションを停止
+                stopStarAnimation();
+
                 isGameRunning = true;
                 goButton.disabled = true; // Disable Go! button
                 marks.forEach(mark => mark.state = 'moving_down'); // Set all marks to moving state
