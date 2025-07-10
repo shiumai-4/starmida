@@ -64,6 +64,7 @@
             transition: all 0.2s ease-in-out; /* ホバーエフェクトのためのトランジション */
             cursor: pointer;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            border: none;
         }
         .game-button:hover {
             transform: translateY(-2px); /* ホバー時に少し上に移動 */
@@ -73,7 +74,6 @@
         #goButton {
             background-color: #48bb78; /* 緑色 */
             color: white;
-            border: none;
         }
         #goButton:disabled {
             background-color: #2f855a; /* 無効時の色 */
@@ -83,20 +83,17 @@
         #resetButton {
             background-color: #ecc94b; /* 黄色 */
             color: #2d3748; /* ダークなテキスト色 */
-            border: none;
         }
         /* ステージボタンのスタイル */
         #stageButton {
             background-color: #4299e1; /* 青色 */
             color: white;
-            border: none;
         }
 
         /* HINTボタンのスタイル */
         #hintButton {
             background-color: #e53e3e; /* 赤色 */
             color: white;
-            border: none;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -147,19 +144,34 @@
         .modal-overlay.show .modal-content {
             transform: scale(1); /* 表示時に元のサイズに */
         }
-        /* h2のfont-sizeとmargin-bottomはJSで動的に設定されるため、ここでは削除 */
-        .modal-content button {
-            background-color: #4299e1; /* 青色 */
-            color: white;
+        /* ★ 追加: 結果モーダルのボタンコンテナ */
+        #resultModal .modal-button-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        /* ★ 追加: 結果モーダルのボタン共通スタイル */
+        #resultModal .modal-action-button {
             padding: 0.75rem 1.5rem;
             border-radius: 0.75rem;
             font-weight: bold;
             border: none;
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
+            transition: all 0.2s ease-in-out;
         }
-        .modal-content button:hover {
-            background-color: #3182ce;
+        #resultModal .modal-action-button:hover {
+            transform: translateY(-2px);
+        }
+        /* ★ 追加: 結果モーダルのリセットボタンスタイル */
+        #modalResetButton {
+            background-color: #4299e1; /* 青色 */
+            color: white;
+        }
+        /* ★ 追加: 次へボタンのスタイル */
+        #nextStageButton {
+            background-color: #48bb78; /* 緑色 */
+            color: white;
         }
 
         /* ステージ選択パネルのスタイル */
@@ -195,30 +207,33 @@
             gap: 0.5rem; /* ボタン間のスペース */
         }
         .stage-button {
-            background-color: #6366f1; /* デフォルトのステージボタン色 (Indigo 500) */
+            background-color: #4299e1; /* デフォルトを水色に変更 */
             color: white;
-            /* widthとheightはJSで動的に設定されるため、ここでは削除 */
             padding: 0; /* 幅と高さを固定するためパディングを削除 */
             border-radius: 0.5rem;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
+            transition: all 0.2s ease-in-out;
             text-align: center;
-            display: flex; /* テキストを中央に配置するため */
-            justify-content: center; /* テキストを中央に配置するため */
-            align-items: center; /* テキストを中央に配置するため */
-            font-size: 0.875rem; /* ボタン内のテキストサイズを調整 */
-            flex-shrink: 0; /* ボタンが縮まないようにする */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+            border: 2px solid transparent; /* 枠線用のスペースを確保 */
         }
         .stage-button:hover {
-            background-color: #4f46e5; /* ホバー時の色 (Indigo 600) */
+            background-color: #3182ce; /* 水色のホバー色 */
+        }
+        .stage-button.cleared {
+            background-color: #ecc94b; /* 黄色 */
+            color: #2d3748; /* 暗いテキスト色 */
+        }
+        .stage-button.cleared:hover {
+            background-color: #d69e2e; /* 暗い黄色 */
         }
         .stage-button.current-stage {
-            background-color: #ef4444; /* 現在のステージボタン色 (Red 500) */
-            border: 2px solid #f87171; /* 枠線を追加 */
-        }
-        .stage-button.current-stage:hover {
-            background-color: #dc2626; /* ホバー時の色 (Red 600) */
+            border-color: #f87171; /* 赤い枠線 */
         }
     </style>
 </head>
@@ -239,7 +254,10 @@
     <div id="resultModal" class="modal-overlay">
         <div class="modal-content">
             <h2 id="resultText"></h2>
-            <button id="modalResetButton">リセット</button>
+            <div class="modal-button-container">
+                <button id="modalResetButton" class="modal-action-button">リセット</button>
+                <button id="nextStageButton" class="modal-action-button" style="display: none;">次へ</button>
+            </div>
         </div>
     </div>
 
@@ -257,9 +275,10 @@
         // Constants and global variables
         const LINE_COUNT = 4; // Number of vertical lines (A, B, C, D)
         const POINT_COUNT_PER_LINE = 9; // Number of points on each vertical line
-        const TARGET_ANIMATION_SECONDS = 8; // ★ 追加: マークがゴールするまでの目標時間（秒）
+        const TARGET_ANIMATION_SECONDS = 2; // マークがゴールするまでの目標時間（秒）を2秒に設定
+        const CLEAR_STATUS_STORAGE_KEY = 'amidakujiClearStatus'; // ローカルストレージのキー
         
-        let MARK_SPEED = 5; // ★ 変更: letに変更し、動的に計算されるようにする
+        let MARK_SPEED = 5; // letに変更し、動的に計算されるようにする
         let MARK_FONT_SIZE = 30; // Mark font size (動的に計算される)
         let LINE_START_Y = 50; // LINE_START_Yをletに変更し、初期値を設定
 
@@ -559,61 +578,58 @@
         const ctx = canvas.getContext('2d');
         const goButton = document.getElementById('goButton');
         const resetButton = document.getElementById('resetButton');
-        const stageButton = document.getElementById('stageButton'); // New Stage button
-        const hintButton = document.getElementById('hintButton'); // New HINT button
+        const stageButton = document.getElementById('stageButton');
+        const hintButton = document.getElementById('hintButton');
         const resultModal = document.getElementById('resultModal');
         const resultText = document.getElementById('resultText');
         const modalResetButton = document.getElementById('modalResetButton');
-        const stageSelectModal = document.getElementById('stageSelectModal'); // Stage selection modal
-        const stageButtonsFrame = document.getElementById('stageButtonsFrame'); // New: Frame for scrollable buttons
-        const stageButtonsContainer = document.getElementById('stageButtonsContainer'); // Container for stage buttons
-        const gameWrapper = document.getElementById('gameWrapper'); // gameWrapper要素を取得
-        const stageSelectTitle = document.getElementById('stageSelectTitle'); // ステージ選択タイトル要素を取得
+        const nextStageButton = document.getElementById('nextStageButton'); // ★ 追加
+        const stageSelectModal = document.getElementById('stageSelectModal');
+        const stageButtonsFrame = document.getElementById('stageButtonsFrame');
+        const stageButtonsContainer = document.getElementById('stageButtonsContainer');
+        const gameWrapper = document.getElementById('gameWrapper');
+        const stageSelectTitle = document.getElementById('stageSelectTitle');
 
         // Game state variables
-        let verticalLineX = []; // X-coordinates of each vertical line
-        let pointY = []; // Y-coordinates of each point
-        let ladderMap = {}; // Map for efficient horizontal connection lookup
-        let marks = []; // Array of mark objects
-        let isGameRunning = false; // Flag indicating if the game is running
-        let finishedMarksCount = 0; // Number of marks that have reached their end point
-        let gameResult = null; // Game result ('clear', 'fail', null)
-        let animationFrameId = null; // requestAnimationFrame ID
-        let isHintActive = false; // Flag for hint display state
-        // Global variable to store patterns that were changed by hint
+        let verticalLineX = [];
+        let pointY = [];
+        let ladderMap = {};
+        let marks = [];
+        let isGameRunning = false;
+        let finishedMarksCount = 0;
+        let gameResult = null;
+        let animationFrameId = null;
+        let isHintActive = false;
         let originalPatternsBeforeHint = [];
-
-        // Mutable array for horizontal connections, including current active pattern
         let allHorizontalConnections = [];
-
-        // Array of area objects
         let areas = [];
-
-        // Global variables to hold current game settings from the loaded preset
         let currentStartMarks = [];
         let currentEndMarks = [];
-        let currentStageIndex = 0; // Keep track of the current active stage preset
-
-        // 'l'と'r'属性の線を保持する配列と、星アニメーション用のタイマーID
+        let currentStageIndex = 0;
         let leftOnlyLines = [];
         let rightOnlyLines = [];
         let starAnimationInterval = null;
 
+        // ローカルストレージ関連のヘルパー関数
+        function getClearStatus() {
+            const status = localStorage.getItem(CLEAR_STATUS_STORAGE_KEY);
+            if (status) {
+                return JSON.parse(status);
+            }
+            return new Array(GAME_PRESETS.length).fill(false);
+        }
 
-        /**
-         * Converts a hex color to an RGBA string.
-         * @param {string} hex - The hex color string (e.g., '#RRGGBB' or '#RGB').
-         * @param {number} alpha - The alpha transparency value (0 to 1).
-         * @returns {string} - The RGBA color string.
-         */
+        function saveClearStatus(statusArray) {
+            localStorage.setItem(CLEAR_STATUS_STORAGE_KEY, JSON.stringify(statusArray));
+        }
+
         function hexToRgba(hex, alpha) {
             let r = 0, g = 0, b = 0;
-            // Handle #RRGGBB or #RGB
-            if (hex.length === 7) { // #RRGGBB
+            if (hex.length === 7) {
                 r = parseInt(hex.substring(1, 3), 16);
                 g = parseInt(hex.substring(3, 5), 16);
                 b = parseInt(hex.substring(5, 7), 16);
-            } else if (hex.length === 4) { // #RGB
+            } else if (hex.length === 4) {
                 r = parseInt(hex[1] + hex[1], 16);
                 g = parseInt(hex[2] + hex[2], 16);
                 b = parseInt(hex[3] + hex[3], 16);
@@ -621,252 +637,132 @@
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
 
-        /**
-         * Helper function to check if a click/touch coordinate is within a rectangle.
-         * @param {number} x - X-coordinate of the click/touch.
-         * @param {number} y - Y-coordinate of the click/touch.
-         * @param {object} rect - Rectangle object ({x, y, width, height}).
-         * @returns {boolean} - True if within the rectangle, false otherwise.
-         */
         function isPointInRect(x, y, rect) {
             return x >= rect.x && x <= rect.x + rect.width &&
                    y >= rect.y && y <= rect.y + rect.height;
         }
 
-        /**
-         * Calculates coordinates for vertical lines and points, and sets initial position and size for the area.
-         */
         function setupCoordinates() {
             verticalLineX = [];
             pointY = [];
-
-            // Make LINE_SPACING_X dynamic based on canvas width
-            const horizontalMarginRatio = 0.15; // キャンバス幅の15%を左右マージンとする
+            const horizontalMarginRatio = 0.15;
             const effectiveCanvasWidth = canvas.width * (1 - 2 * horizontalMarginRatio);
-            const dynamicLineSpacingX = effectiveCanvasWidth / (LINE_COUNT - 1); // 線間の間隔
-
-            const startX = canvas.width * horizontalMarginRatio; // 計算された左マージンから開始
+            const dynamicLineSpacingX = effectiveCanvasWidth / (LINE_COUNT - 1);
+            const startX = canvas.width * horizontalMarginRatio;
             for (let i = 0; i < LINE_COUNT; i++) {
                 verticalLineX.push(startX + i * dynamicLineSpacingX);
             }
-
-            // Make LINE_START_Y dynamic based on canvas height
-            const verticalMarginRatio = 0.1; // キャンバス高さの10%を上下マージンとする
+            const verticalMarginRatio = 0.1;
             const dynamicLineStartY = canvas.height * verticalMarginRatio;
-            LINE_START_Y = dynamicLineStartY; // グローバル変数LINE_START_Yを更新
-
+            LINE_START_Y = dynamicLineStartY;
             const effectiveLineHeight = canvas.height * (1 - 2 * verticalMarginRatio);
-
-            // Calculate Y-coordinate for point 1 (index 0) (10% from the top of the effective line height)
             const firstPointY = LINE_START_Y + (effectiveLineHeight * 0.1);
-
-            // Calculate Y-coordinate for point 9 (index 8) (10% from the bottom of the effective line height)
             const lastPointY = (canvas.height - LINE_START_Y) - (effectiveLineHeight * 0.1);
-
-            // Dynamically calculate vertical spacing between points
             const dynamicPointSpacingY = (lastPointY - firstPointY) / (POINT_COUNT_PER_LINE - 1);
-
-            // Calculate Y-coordinates for each point
             for (let i = 0; i < POINT_COUNT_PER_LINE; i++) {
                 pointY.push(firstPointY + i * dynamicPointSpacingY);
             }
-
-            // Define area width (same for all areas) - also needs to be dynamic
-            const areaWidth = dynamicLineSpacingX * 1.2; // 線間の間隔より少し大きくする
-
-            // 縦線の有効な高さの80%をエリアの配置に使う
+            const areaWidth = dynamicLineSpacingX * 1.2;
             const eightyPercentLineHeight = effectiveLineHeight * 0.8;
-
-            // 小エリアの高さは、縦線の80%を3等分にした高さ
             const smallAreaHeight = eightyPercentLineHeight / 3;
-
-            // 大エリアの高さは小エリアの2倍
             const largeAreaHeight = smallAreaHeight * 2;
-
-            // 各セクション間の垂直マージン (小エリアの高さに基づいて調整)
-            const areaVerticalMargin = smallAreaHeight * 0.1; // 小エリアの高さの10%をマージンとする
-
-            // 各セクションの基準Y座標
+            const areaVerticalMargin = smallAreaHeight * 0.1;
             const baseY_section1 = LINE_START_Y + areaVerticalMargin;
             const baseY_section2 = baseY_section1 + smallAreaHeight + areaVerticalMargin;
-            const baseY_section3 = baseY_section1 + (smallAreaHeight + areaVerticalMargin) * 2; // Corrected to be based on section1
-            // const baseY_section3 = baseY_section2 + smallAreaHeight + areaVerticalMargin; // Original, less accurate
-
-            // 大エリアの開始Y座標を、小エリアの2段目の開始Y座標に設定
-            // これにより、大エリアが小エリアの2段目と3段目の範囲をカバーする
+            const baseY_section3 = baseY_section1 + (smallAreaHeight + areaVerticalMargin) * 2;
             const baseY_section4 = baseY_section2;
-
-            // Define base X coordinates for areas, centered over the gaps between vertical lines
             const baseX_AB_center = (verticalLineX[0] + verticalLineX[1]) / 2 - (areaWidth / 2);
             const baseX_BC_center = (verticalLineX[1] + verticalLineX[2]) / 2 - (areaWidth / 2);
             const baseX_CD_center = (verticalLineX[2] + verticalLineX[3]) / 2 - (areaWidth / 2);
-
-
             areas = [
-                // Section 1 (Small areas - 3 areas)
                 { x: baseX_AB_center, y: baseY_section1, width: areaWidth, height: smallAreaHeight },
                 { x: baseX_BC_center + areaWidth * 0.1, y: baseY_section1 + smallAreaHeight * 0.1, width: areaWidth, height: smallAreaHeight },
                 { x: baseX_CD_center, y: baseY_section1 - smallAreaHeight * 0.05, width: areaWidth, height: smallAreaHeight },
-
-                // Section 2 (Small areas - 3 areas)
                 { x: baseX_AB_center + areaWidth * 0.05, y: baseY_section2 - smallAreaHeight * 0.05, width: areaWidth, height: smallAreaHeight },
                 { x: baseX_BC_center, y: baseY_section2 + smallAreaHeight * 0.05, width: areaWidth, height: smallAreaHeight },
                 { x: baseX_CD_center - areaWidth * 0.05, y: baseY_section2, width: areaWidth, height: smallAreaHeight },
-
-                // Section 3 (Small areas - 3 areas)
                 { x: baseX_AB_center, y: baseY_section3 + smallAreaHeight * 0.05, width: areaWidth, height: smallAreaHeight },
                 { x: baseX_BC_center + areaWidth * 0.05, y: baseY_section3 - smallAreaHeight * 0.05, width: areaWidth, height: smallAreaHeight },
                 { x: baseX_CD_center, y: baseY_section3 + smallAreaHeight * 0.05, width: areaWidth, height: smallAreaHeight },
-
-                // Section 4 (Large areas - 3 areas)
                 { x: baseX_AB_center, y: baseY_section4, width: areaWidth, height: largeAreaHeight },
                 { x: baseX_BC_center + areaWidth * 0.1, y: baseY_section4 + largeAreaHeight * 0.1, width: areaWidth, height: largeAreaHeight },
                 { x: baseX_CD_center, y: baseY_section4 - largeAreaHeight * 0.05, width: areaWidth, height: largeAreaHeight }
             ].map((pos, index) => ({
-                x: pos.x,
-                y: pos.y,
-                width: pos.width,
-                height: pos.height,
-                isSelected: false,
-                associatedLines: [],
-                color: AREA_COLORS[index],
-                isOn: false // Default to false, will be set by initializeGameData
+                x: pos.x, y: pos.y, width: pos.width, height: pos.height,
+                isSelected: false, associatedLines: [], color: AREA_COLORS[index], isOn: false
             }));
-
-            // Update MARK_FONT_SIZE based on canvas height to maintain proportionality
-            MARK_FONT_SIZE = canvas.height * 0.05; // キャンバス高さの約5%
+            MARK_FONT_SIZE = canvas.height * 0.05;
         }
 
-        /**
-         * Associates horizontal lines with a specific area.
-         * Only horizontal lines whose center is within the targetArea are associated, regardless of their 'active' status.
-         * @param {object} targetArea - The area object to associate lines with.
-         */
         function associateHorizontalLinesWithArea(targetArea) {
-            targetArea.associatedLines = []; // Clear existing associations for this specific area
-
-            allHorizontalConnections.forEach(conn => { // Iterate over all connections
-                // Get the attribute for the current pattern (even if 'n' for association)
+            targetArea.associatedLines = [];
+            allHorizontalConnections.forEach(conn => {
                 const attribute = conn.patterns[conn.currentActivePattern];
-
                 const x1 = verticalLineX[conn.fromLine];
                 const y1 = pointY[conn.fromPoint];
                 const x2 = verticalLineX[conn.toLine];
                 const midX = (x1 + x2) / 2;
-                const midY = y1; // Or y2, since they are the same for horizontal lines
-
-                // Check if the midpoint of the horizontal line is within the targetArea's bounds
-                // Non-active lines are now also associated
+                const midY = y1;
                 if (isPointInRect(midX, midY, targetArea)) {
                     targetArea.associatedLines.push({
-                        fromLine: conn.fromLine,
-                        fromPoint: conn.fromPoint,
-                        toLine: conn.toLine,
-                        toPoint: conn.toPoint,
-                        midX: midX,
-                        midY: midY,
-                        attribute: attribute, // Store the attribute of the associated line
-                        originalConnection: conn // Store a reference to the original connection object in allHorizontalConnections
+                        fromLine: conn.fromLine, fromPoint: conn.fromPoint,
+                        toLine: conn.toLine, toPoint: conn.toPoint,
+                        midX: midX, midY: midY, attribute: attribute,
+                        originalConnection: conn
                     });
                 }
             });
-            console.log(`Associated horizontal lines with area at (${targetArea.x.toFixed(0)}, ${targetArea.y.toFixed(0)}):`, targetArea.associatedLines);
         }
 
-        /**
-         * Handles click/touch events on the canvas.
-         * @param {Event} event - The event object.
-         */
         function handleCanvasClick(event) {
-            // Do nothing if the game is running or stage select is open
             if (isGameRunning || stageSelectModal.classList.contains('show')) return;
-
             const rect = canvas.getBoundingClientRect();
             let clientX, clientY;
-
-            // Differentiate coordinate acquisition for touch and click events
             if (event.type === 'touchstart') {
-                clientX = event.touches[0].clientX;
-                clientY = event.touches[0].clientY;
-            } else { // 'click'
-                clientX = event.clientX;
-                clientY = event.clientY;
+                clientX = event.touches[0].clientX; clientY = event.touches[0].clientY;
+            } else {
+                clientX = event.clientX; clientY = event.clientY;
             }
-
-            // Calculate relative coordinates within the canvas
             const mouseX = clientX - rect.left;
             const mouseY = clientY - rect.top;
-
-            let clickedOnActiveArea = false; // Flag to check if an 'on' area was clicked
-            // Check if any area was clicked
+            let clickedOnActiveArea = false;
             for (let i = 0; i < areas.length; i++) {
                 const currentArea = areas[i];
-                // If hint is active and this is a hint area, it's not clickable
                 const isCurrentAreaHint = GAME_PRESETS[currentStageIndex].hints.some(hint => hint[0] === i);
-                if (isHintActive && isCurrentAreaHint) {
-                    continue; // Skip processing clicks on hidden hint areas
-                }
-
+                if (isHintActive && isCurrentAreaHint) continue;
                 if (isPointInRect(mouseX, mouseY, currentArea)) {
-                    if (currentArea.isOn) { // Only proceed if the area is 'on'
+                    if (currentArea.isOn) {
                         clickedOnActiveArea = true;
                         if (currentArea.isSelected) {
-                            // This area was already selected, so toggle pattern for its associated lines
                             currentArea.associatedLines.forEach(associatedLine => {
                                 const originalConn = associatedLine.originalConnection;
                                 originalConn.currentActivePattern = (originalConn.currentActivePattern === 'p1') ? 'p2' : 'p1';
                             });
-
-                            // After pattern switch, deselect this area and all others
-                            areas.forEach(a => {
-                                a.isSelected = false;
-                                a.associatedLines = [];
-                            });
-                            initializeLadderMap(); // Rebuild ladder map with new patterns
+                            areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
+                            initializeLadderMap();
                         } else {
-                            // This area was not selected, so select it. Deselect all other areas first.
-                            areas.forEach(a => {
-                                a.isSelected = false;
-                                a.associatedLines = [];
-                            });
+                            areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
                             currentArea.isSelected = true;
-                            associateHorizontalLinesWithArea(currentArea); // Associate lines with this specific area
+                            associateHorizontalLinesWithArea(currentArea);
                         }
-                        break; // Only one area can be clicked at a time (first one found if overlapping)
+                        break;
                     }
                 }
             }
-
-            if (!clickedOnActiveArea) { // Check the new flag
-                // Clicked outside any active area, deselect all areas
-                areas.forEach(a => {
-                    a.isSelected = false;
-                    a.associatedLines = [];
-                });
+            if (!clickedOnActiveArea) {
+                areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
             }
-            drawGame(); // Update drawing
+            drawGame();
         }
 
-        /**
-         * Adjusts canvas size and recalculates line and point coordinates.
-         */
         function resizeCanvas() {
-            // 現在のエリアの 'isOn' 状態を一時的に保存
             const oldOnStates = areas.map(a => a.isOn);
-
-            // レイアウト計算に使う画面幅の最小値を720pxに設定
             const effectiveInnerWidth = Math.max(window.innerWidth, 720);
-
-            const overallAspectRatio = 4 / 3; // ゲーム全体の目標アスペクト比
-            const marginRatio = 0.9; // 画面の90%を使用
-
-            // 実際の画面幅(window.innerWidth)の代わりに、計算上の有効幅(effectiveInnerWidth)を使用
+            const overallAspectRatio = 4 / 3;
+            const marginRatio = 0.9;
             const availableWidth = effectiveInnerWidth * marginRatio;
             const availableHeight = window.innerHeight * marginRatio;
-
             let wrapperWidth, wrapperHeight;
-
-            // gameWrapperのサイズをアスペクト比を維持しつつ計算
             if (availableWidth / availableHeight > overallAspectRatio) {
                 wrapperHeight = availableHeight;
                 wrapperWidth = wrapperHeight * overallAspectRatio;
@@ -874,30 +770,15 @@
                 wrapperWidth = availableWidth;
                 wrapperHeight = wrapperWidth / overallAspectRatio;
             }
-
-            // gameWrapperのCSSサイズを設定
             gameWrapper.style.width = `${wrapperWidth}px`;
             gameWrapper.style.height = `${wrapperHeight}px`;
-
-            // タイトルとボタンの高さの概算 (remをpxに変換)
-            // h1 (text-3xl: 30px) + mb-6 (24px) = 54px
-            // button-container (padding: 0.75rem*2 + font-size) + gap (1rem)
-            // Tailwindのremは通常16pxベース
-            const titleHeightEstimate = 54; // h1の高さとマージン
-            const buttonHeightEstimate = (0.75 * 16 * 2) + (16 * 1) + (1.5 * 16); // ボタンのパディング、フォントサイズ、ボタンコンテナのマージンボトム
-            const wrapperPadding = 2 * 16; // gameWrapperの上下パディング (1rem * 2)
-
-            // キャンバスが利用できる高さと幅を計算
-            // HINTボタンの幅も考慮に入れる
+            const titleHeightEstimate = 54;
+            const buttonHeightEstimate = (0.75 * 16 * 2) + (16 * 1) + (1.5 * 16);
+            const wrapperPadding = 2 * 16;
             const canvasAvailableHeight = wrapperHeight - titleHeightEstimate - buttonHeightEstimate - wrapperPadding;
-            // HINTボタンの幅はcanvasの高さに依存するため、ここでは仮の値を使い、後で正確な値を設定する
-            const canvasAvailableWidth = wrapperWidth - wrapperPadding - 50 - 16; // 仮のHINTボタン幅50pxとギャップ1rem(16px)を引く
-
-            // キャンバスの内部アスペクト比 (描画内容に合わせて調整)
-            const canvasInternalAspectRatio = 4 / 3; // キャンバス内の描画も4:3を維持すると仮定
-
+            const canvasAvailableWidth = wrapperWidth - wrapperPadding - 50 - 16;
+            const canvasInternalAspectRatio = 4 / 3;
             let currentCanvasWidth, currentCanvasHeight;
-
             if (canvasAvailableWidth / canvasAvailableHeight > canvasInternalAspectRatio) {
                 currentCanvasHeight = canvasAvailableHeight;
                 currentCanvasWidth = currentCanvasHeight * canvasInternalAspectRatio;
@@ -905,32 +786,17 @@
                 currentCanvasWidth = canvasAvailableWidth;
                 currentCanvasHeight = currentCanvasWidth / canvasInternalAspectRatio;
             }
-
-            // キャンバスのサイズを更新
             canvas.width = currentCanvasWidth;
             canvas.height = currentCanvasHeight;
-            
-            // ★ 追加: MARK_SPEEDを動的に計算
-            // 60FPS(1秒間に60フレーム)を想定して、1フレームに進むべき距離を計算
             MARK_SPEED = (canvas.height / TARGET_ANIMATION_SECONDS) / 60;
-
-
-            // メインのゲームボタン（HINT, Stage, Go!, Reset）のサイズをキャンバスの高さの1/10の正方形に合わせる。ただし最大50pxまで。
-            const buttonSize = Math.min(currentCanvasHeight / 10, 50); // 共通のボタンサイズ
-
-            // HINTボタンのスタイル設定
-            hintButton.style.width = `${buttonSize}px`; // 幅を高さに合わせる
+            const buttonSize = Math.min(currentCanvasHeight / 10, 50);
+            hintButton.style.width = `${buttonSize}px`;
             hintButton.style.height = `${buttonSize}px`;
-            hintButton.style.borderRadius = `${buttonSize * 0.1}px`; // 角丸も調整 (例として10%)
-            hintButton.style.fontSize = `${buttonSize / 2}px`; // フォントサイズを高さの1/2に設定
-
-            // Stage, Go!, Resetボタンも同様の高さに調整
+            hintButton.style.borderRadius = `${buttonSize * 0.1}px`;
+            hintButton.style.fontSize = `${buttonSize / 2}px`;
             stageButton.style.height = `${buttonSize}px`;
             goButton.style.height = `${buttonSize}px`;
             resetButton.style.height = `${buttonSize}px`;
-
-            // ボタンのパディングを調整してテキストが中央に表示されるようにする
-            // 現在のフォントサイズを取得
             const currentFontSize = parseFloat(getComputedStyle(stageButton).fontSize);
             const buttonPaddingY = (buttonSize - currentFontSize) / 2;
             stageButton.style.paddingTop = `${buttonPaddingY}px`;
@@ -939,221 +805,122 @@
             goButton.style.paddingBottom = `${buttonPaddingY}px`;
             resetButton.style.paddingTop = `${buttonPaddingY}px`;
             resetButton.style.paddingBottom = `${buttonPaddingY}px`;
-            // 幅はテキストの長さに応じて自動調整されるようにpaddingLeft/Rightはそのまま
-
-            // ステージ選択パネルの高さと幅を調整
             let stageSelectModalHeight = Math.min(currentCanvasHeight * 3 / 4, 270);
-            let stageSelectModalWidth = stageSelectModalHeight * (3 / 2); // 縦:横が2:3なので、横は縦の1.5倍
-
+            let stageSelectModalWidth = stageSelectModalHeight * (3 / 2);
             const stageSelectModalContent = document.querySelector('#stageSelectModal .modal-content');
             if (stageSelectModalContent) {
                 stageSelectModalContent.style.maxHeight = `${stageSelectModalHeight}px`;
                 stageSelectModalContent.style.width = `${stageSelectModalWidth}px`;
             }
-
-            // 「ステージ選択」の文字のフォントサイズとマージンを調整
-            const stageSelectTitleFontSize = stageSelectModalHeight / 18; // 1/18に変更
+            const stageSelectTitleFontSize = stageSelectModalHeight / 18;
             const stageSelectTitleMarginBottom = stageSelectTitleFontSize / 4;
-
             if (stageSelectTitle) {
                 stageSelectTitle.style.fontSize = `${stageSelectTitleFontSize}px`;
                 stageSelectTitle.style.marginBottom = `${stageSelectTitleMarginBottom}px`;
             }
-
-            // ステージボタン枠の高さ計算
-            // modal-contentのpadding: 1rem (上下で32px)
-            // h2のfont-sizeとmargin-bottomは動的に計算されたものを使用
             const stageButtonsFrameHeight = stageSelectModalHeight - (16 * 2) - stageSelectTitleFontSize - stageSelectTitleMarginBottom;
             const stageButtonsFrame = document.getElementById('stageButtonsFrame');
             if (stageButtonsFrame) {
                 stageButtonsFrame.style.height = `${stageButtonsFrameHeight}px`;
-                // flex-growとmin-heightをautoに設定して、明示的な高さが適用されるようにする
                 stageButtonsFrame.style.flexGrow = '0';
                 stageButtonsFrame.style.minHeight = 'auto';
             }
-
-            setupCoordinates(); // 座標とエリアを再計算
-
-            // 保存しておいた 'isOn' 状態を復元
+            setupCoordinates();
             if (oldOnStates.length === areas.length) {
-                areas.forEach((area, index) => {
-                    area.isOn = oldOnStates[index];
-                });
+                areas.forEach((area, index) => { area.isOn = oldOnStates[index]; });
             }
-
-            initializeLadderMap(); // 現在のパターンでラダーマップを再初期化
-
-            // リサイズ後にマークの位置とエリアの選択状態をリセットする
+            initializeLadderMap();
             if (!isGameRunning) {
-                // マークの初期位置を更新
                 marks.forEach((mark, index) => {
-                    if(verticalLineX[index]) { // verticalLineXが定義されているか確認
-                        mark.x = verticalLineX[index];
-                        mark.y = MARK_FONT_SIZE / 2;
-                        mark.originalX = verticalLineX[index];
-                        mark.originalY = MARK_FONT_SIZE / 2;
+                    if(verticalLineX[index]) {
+                        mark.x = verticalLineX[index]; mark.y = MARK_FONT_SIZE / 2;
+                        mark.originalX = verticalLineX[index]; mark.originalY = MARK_FONT_SIZE / 2;
                     }
                 });
-
-                // すべてのエリアの選択状態を解除
-                areas.forEach(a => {
-                    a.isSelected = false;
-                    a.associatedLines = [];
-                });
+                areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
             }
-
-            drawGame(); // ゲームを再描画
+            drawGame();
         }
 
-        /**
-         * Initializes the game's horizontal connection data and area on states from a preset.
-         * Creates a deep copy of the selected preset's horizontal connections and sets initial active patterns.
-         * @param {number} presetIndex - The index of the preset to load from GAME_PRESETS.
-         */
         function initializeGameData(presetIndex = 0) {
             const selectedPreset = GAME_PRESETS[presetIndex];
-
-            // Set global start and end marks based on the preset
             currentStartMarks = selectedPreset.startMarks;
             currentEndMarks = selectedPreset.endMarks;
-            currentStageIndex = presetIndex; // Update current stage index
-
-            // Initialize allHorizontalConnections based on the preset's definitions
+            currentStageIndex = presetIndex;
             allHorizontalConnections = selectedPreset.horizontalConnections.map(presetConn => {
-                // Create a new object combining the fixed line geometry and the preset's patterns
                 const newConn = { ...presetConn.line, patterns: JSON.parse(JSON.stringify(presetConn.patterns)) };
-                newConn.currentActivePattern = 'p1'; // Set initial active pattern for each line
+                newConn.currentActivePattern = 'p1';
                 return newConn;
             });
-
-            // Set area 'isOn' states based on the preset
             selectedPreset.areaOnStates.forEach((isOnState, index) => {
-                if (areas[index]) {
-                    areas[index].isOn = isOnState;
-                }
+                if (areas[index]) areas[index].isOn = isOnState;
             });
-
-            // Reset hint state and clear stored patterns when game data is initialized
             isHintActive = false;
             hintButton.classList.remove('active');
             originalPatternsBeforeHint = [];
-
-            initializeLadderMap(); // Build the ladder map based on this initialized data
+            initializeLadderMap();
         }
 
-        /**
-         * Initializes the map for efficient horizontal connection lookup based on the current pattern for each line.
-         */
         function initializeLadderMap() {
             ladderMap = {};
-            // leftOnlyLinesとrightOnlyLines配列をリセット
             leftOnlyLines = [];
             rightOnlyLines = [];
-
-            // Create map entries for each vertical line
             for (let i = 0; i < LINE_COUNT; i++) {
                 ladderMap[i] = {};
             }
-
             allHorizontalConnections.forEach(conn => {
-                const attribute = conn.patterns[conn.currentActivePattern]; // Get attribute based on current active pattern
-
-                // 属性が'l'または'r'の場合、それぞれの配列に情報を追加
+                const attribute = conn.patterns[conn.currentActivePattern];
                 if (attribute === 'l') {
-                    // 重複して描画しないように、インデックスが小さい方から大きい方への線のみを対象
                     if (conn.fromLine < conn.toLine) {
-                        leftOnlyLines.push({
-                            fromLine: conn.fromLine,
-                            fromPoint: conn.fromPoint,
-                            toLine: conn.toLine,
-                            toPoint: conn.toPoint
-                        });
+                        leftOnlyLines.push({ fromLine: conn.fromLine, fromPoint: conn.fromPoint, toLine: conn.toLine, toPoint: conn.toPoint });
                     }
                 } else if (attribute === 'r') {
-                    // 重複して描画しないように、インデックスが小さい方から大きい方への線のみを対象
                     if (conn.fromLine < conn.toLine) {
-                        rightOnlyLines.push({
-                            fromLine: conn.fromLine,
-                            fromPoint: conn.fromPoint,
-                            toLine: conn.toLine,
-                            toPoint: conn.toPoint
-                        });
+                        rightOnlyLines.push({ fromLine: conn.fromLine, fromPoint: conn.fromPoint, toLine: conn.toLine, toPoint: conn.toPoint });
                     }
                 }
-
-                // Connection from fromLine to toLine
-                ladderMap[conn.fromLine][conn.fromPoint] = {
-                    targetLine: conn.toLine,
-                    targetPoint: conn.toPoint,
-                    attribute: attribute // Add attribute
-                };
-                // Reverse connection from toLine to fromLine (if a mark comes from the opposite direction)
-                ladderMap[conn.toLine][conn.toPoint] = {
-                    targetLine: conn.fromLine,
-                    targetPoint: conn.fromPoint,
-                    attribute: attribute // Add attribute
-                };
+                ladderMap[conn.fromLine][conn.fromPoint] = { targetLine: conn.toLine, targetPoint: conn.toPoint, attribute: attribute };
+                ladderMap[conn.toLine][conn.toPoint] = { targetLine: conn.fromLine, targetPoint: conn.fromPoint, attribute: attribute };
             });
         }
 
-        /**
-         * Toggles the hint display and applies/reverts hint patterns.
-         */
         function toggleHint() {
             isHintActive = !isHintActive;
             hintButton.classList.toggle('active', isHintActive);
-
             const currentHints = GAME_PRESETS[currentStageIndex].hints;
-
             if (isHintActive) {
-                // HINT ON: Store original patterns and apply hint patterns
-                originalPatternsBeforeHint = []; // Clear previous state before populating
-
+                originalPatternsBeforeHint = [];
                 currentHints.forEach(([areaIndex, targetPattern]) => {
                     const area = areas[areaIndex];
-                    if (area && area.isOn) { // Only process if the area exists and is 'on'
-                        // Iterate through all horizontal connections to find those within the hint area
+                    if (area && area.isOn) {
                         allHorizontalConnections.forEach(conn => {
                             const x1 = verticalLineX[conn.fromLine];
                             const y1 = pointY[conn.fromPoint];
                             const x2 = verticalLineX[conn.toLine];
                             const midX = (x1 + x2) / 2;
                             const midY = y1;
-
                             if (isPointInRect(midX, midY, area)) {
-                                // This connection is within the hint area
-                                // Only store if the pattern is actually changing to avoid unnecessary entries
                                 if (conn.currentActivePattern !== targetPattern) {
-                                    originalPatternsBeforeHint.push({
-                                        connection: conn,
-                                        originalPattern: conn.currentActivePattern // Store the current pattern
-                                    });
-                                    conn.currentActivePattern = targetPattern; // Apply the hint pattern
+                                    originalPatternsBeforeHint.push({ connection: conn, originalPattern: conn.currentActivePattern });
+                                    conn.currentActivePattern = targetPattern;
                                 }
                             }
                         });
                     }
                 });
             } else {
-                // HINT OFF: Restore original patterns
                 originalPatternsBeforeHint.forEach(item => {
                     item.connection.currentActivePattern = item.originalPattern;
                 });
-                originalPatternsBeforeHint = []; // Clear stored patterns after restoring
+                originalPatternsBeforeHint = [];
             }
-
-            initializeLadderMap(); // Rebuild ladder map with new/restored patterns
-            drawGame(); // Redraw game
+            initializeLadderMap();
+            drawGame();
         }
 
-        /**
-         * Draws the game elements on the canvas.
-         */
         function drawGame() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-
-            // Draw vertical lines
-            ctx.strokeStyle = '#a0aec0'; // Line color (gray)
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#a0aec0';
             ctx.lineWidth = 2;
             verticalLineX.forEach(x => {
                 ctx.beginPath();
@@ -1161,452 +928,304 @@
                 ctx.lineTo(x, canvas.height - LINE_START_Y);
                 ctx.stroke();
             });
-
-            // Draw horizontal lines
             ctx.lineWidth = 2;
-            // Iterate through ladderMap to draw horizontal lines
             for (const fromLineIndex in ladderMap) {
                 for (const fromPointIndex in ladderMap[fromLineIndex]) {
                     const connection = ladderMap[fromLineIndex][fromPointIndex];
-                    // Do not draw if non-active
                     if (connection.attribute === 'n') continue;
-
-                    // Draw only if fromLineIndex is smaller than targetLineIndex to avoid duplicate drawing
                     if (parseInt(fromLineIndex) < connection.targetLine) {
-                        const x1 = verticalLineX[fromLineIndex];
-                        const y1 = pointY[fromPointIndex];
-                        const x2 = verticalLineX[connection.targetLine];
-                        // For horizontal lines, y1 and y2 are the same
-                        const y2 = pointY[connection.targetPoint];
-
-                        // 'l'と'r'の場合もデフォルトの色(明るい灰色)で描画
-                        ctx.strokeStyle = '#cbd5e0'; // Active, Left-only, Right-only (default): Light gray
-
+                        const leftX = verticalLineX[fromLineIndex];
+                        const rightX = verticalLineX[connection.targetLine];
+                        const y = pointY[fromPointIndex];
+                        const fullWidth = rightX - leftX;
+                        const shortenBy = fullWidth * 0.20;
+                        let drawX1 = leftX, drawX2 = rightX;
+                        if (connection.attribute === 'l') {
+                            drawX1 = leftX + shortenBy;
+                        } else if (connection.attribute === 'r') {
+                            drawX2 = rightX - shortenBy;
+                        }
+                        ctx.strokeStyle = '#cbd5e0';
                         ctx.beginPath();
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
+                        ctx.moveTo(drawX1, y);
+                        ctx.lineTo(drawX2, y);
                         ctx.stroke();
                     }
                 }
             }
-
-            // Draw moving marks (drawn before the areas so they appear on top)
             ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             marks.forEach(mark => {
                 ctx.fillText(mark.char, mark.x, mark.y);
             });
-
-            // Draw areas
             areas.forEach((currentArea, areaIndex) => {
-                // Check if hint is active and this area is a hint area for the current stage
                 const isCurrentAreaHint = GAME_PRESETS[currentStageIndex].hints.some(hint => hint[0] === areaIndex);
-
-                // If hint is active AND this is a hint area, then skip drawing this area
-                if (isHintActive && isCurrentAreaHint) {
-                    return;
-                }
-
-                if (!currentArea.isOn) return; // Only draw if the area is 'on'
-
+                if (isHintActive && isCurrentAreaHint) return;
+                if (!currentArea.isOn) return;
                 ctx.beginPath();
                 ctx.rect(currentArea.x, currentArea.y, currentArea.width, currentArea.height);
-
                 if (currentArea.isSelected) {
-                    ctx.fillStyle = hexToRgba(currentArea.color, 0.2); // Make color semi-transparent
+                    ctx.fillStyle = hexToRgba(currentArea.color, 0.2);
                     ctx.fill();
-                    ctx.strokeStyle = currentArea.color; // Use the solid color for border
+                    ctx.strokeStyle = currentArea.color;
                     ctx.lineWidth = 1;
                     ctx.stroke();
                 } else {
-                    ctx.strokeStyle = hexToRgba(currentArea.color, 0.5); // Set 50% opacity for non-selected border
+                    ctx.strokeStyle = hexToRgba(currentArea.color, 0.5);
                     ctx.lineWidth = 1;
                     ctx.stroke();
                 }
             });
-
-            // Yellow "HINT" text is removed from here.
-
-            // Draw start marks
             ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            currentStartMarks.forEach((markChar, index) => { // Use currentStartMarks
+            currentStartMarks.forEach((markChar, index) => {
                 const x = verticalLineX[index];
-                const y = MARK_FONT_SIZE / 2; // Positioned at the top of the vertical line
+                const y = MARK_FONT_SIZE / 2;
                 ctx.fillText(markChar, x, y);
-                // Draw labels for each vertical line (A, B, C, D)
-                ctx.fillStyle = '#e2e8f0'; // Light text color
+                ctx.fillStyle = '#e2e8f0';
                 ctx.font = `${MARK_FONT_SIZE * 0.6}px 'Inter', sans-serif`;
                 ctx.fillText(String.fromCharCode(65 + index), x, y - MARK_FONT_SIZE * 0.7);
             });
-
-            // Draw end marks
             ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            currentEndMarks.forEach((markChar, index) => { // Use currentEndMarks
+            currentEndMarks.forEach((markChar, index) => {
                 const x = verticalLineX[index];
-                const y = canvas.height - (MARK_FONT_SIZE / 2); // Positioned at the bottom of the vertical line
+                const y = canvas.height - (MARK_FONT_SIZE / 2);
                 ctx.fillText(markChar, x, y);
             });
-
-            // 'l'と'r'属性の線の上に動く星を描画する処理全体を修正
             const now = Date.now();
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-
-            // 'l' (right to left)
             leftOnlyLines.forEach(line => {
-                const x1 = verticalLineX[line.toLine]; // 右側のX座標 (始点)
+                const x1 = verticalLineX[line.toLine];
                 const y1 = pointY[line.fromPoint];
-                const x2 = verticalLineX[line.fromLine]; // 左側のX座標 (終点)
-
+                const x2 = verticalLineX[line.fromLine];
                 const distance = x1 - x2;
                 const duration = distance * 25;
                 const progress = (now % duration) / duration;
-                
-                // 進捗に応じてサイズを計算 (Sin波を利用)
                 const maxStarSize = MARK_FONT_SIZE * 0.6;
                 const minStarSize = MARK_FONT_SIZE * 0.2;
-                const scaleFactor = Math.sin(progress * Math.PI); // 0 -> 1 -> 0
+                const scaleFactor = Math.sin(progress * Math.PI);
                 const currentStarSize = minStarSize + (maxStarSize - minStarSize) * scaleFactor;
-                
                 const starX = x1 - (distance * progress);
                 const starY = y1;
-
-                ctx.font = `${currentStarSize}px "Segoe UI Emoji"`; // 動的なフォントサイズ設定
+                ctx.font = `${currentStarSize}px "Segoe UI Emoji"`;
                 ctx.fillText('✨', starX, starY);
             });
-            
-            // 'r' (left to right)
             rightOnlyLines.forEach(line => {
-                const x1 = verticalLineX[line.fromLine]; // 左側のX座標 (始点)
+                const x1 = verticalLineX[line.fromLine];
                 const y1 = pointY[line.fromPoint];
-                const x2 = verticalLineX[line.toLine]; // 右側のX座標 (終点)
-
+                const x2 = verticalLineX[line.toLine];
                 const distance = x2 - x1;
                 const duration = distance * 25;
                 const progress = (now % duration) / duration;
-
-                // 進捗に応じてサイズを計算 (Sin波を利用)
                 const maxStarSize = MARK_FONT_SIZE * 0.6;
                 const minStarSize = MARK_FONT_SIZE * 0.2;
-                const scaleFactor = Math.sin(progress * Math.PI); // 0 -> 1 -> 0
+                const scaleFactor = Math.sin(progress * Math.PI);
                 const currentStarSize = minStarSize + (maxStarSize - minStarSize) * scaleFactor;
-
                 const starX = x1 + (distance * progress);
                 const starY = y1;
-
-                ctx.font = `${currentStarSize}px "Segoe UI Emoji"`; // 動的なフォントサイズ設定
+                ctx.font = `${currentStarSize}px "Segoe UI Emoji"`;
                 ctx.fillText('✨', starX, starY);
             });
         }
 
-        /**
-         * Updates the position of each mark.
-         * @param {object} mark - The mark object to update.
-         */
         function updateMarkPosition(mark) {
-            if (mark.state === 'finished') return; // Do not update marks that have finished
-
-            const currentLineX = verticalLineX[mark.currentLineIndex];
-
+            if (mark.state === 'finished') return;
             if (mark.state === 'moving_down') {
-                mark.y += MARK_SPEED; // Move downwards
-
-                // Check if the mark has reached the next point
+                mark.y += MARK_SPEED;
                 if (mark.currentPointIndex + 1 < POINT_COUNT_PER_LINE && mark.y >= pointY[mark.currentPointIndex + 1]) {
-                    mark.currentPointIndex++; // Update point index
-                    mark.y = pointY[mark.currentPointIndex]; // Snap to the point's Y-coordinate
-
-                    // Check for a horizontal connection at this point
+                    mark.currentPointIndex++;
+                    mark.y = pointY[mark.currentPointIndex];
                     const connection = ladderMap[mark.currentLineIndex][mark.currentPointIndex];
-                    if (connection && connection.attribute !== 'n') { // Only consider if not non-active
+                    if (connection && connection.attribute !== 'n') {
                         const attribute = connection.attribute;
-                        const isMovingRight = connection.targetLine > mark.currentLineIndex; // Is the mark trying to move right from current line?
-
+                        const isMovingRight = connection.targetLine > mark.currentLineIndex;
                         let shouldChangePath = false;
-
-                        if (attribute === 'a') { // Active
+                        if (attribute === 'a') {
                             shouldChangePath = true;
-                        } else if (attribute === 'l') { // Left-only
-                            // Change path only if moving from right to left (from higher line index to lower line index)
+                        } else if (attribute === 'l') {
                             shouldChangePath = !isMovingRight;
-                        } else if (attribute === 'r') { // Right-only
-                            // Change path only if moving from left to right (from lower line index to higher line index)
+                        } else if (attribute === 'r') {
                             shouldChangePath = isMovingRight;
                         }
-
                         if (shouldChangePath) {
                             mark.state = isMovingRight ? 'moving_horizontal_right' : 'moving_horizontal_left';
                             mark.targetHorizontalLineIndex = connection.targetLine;
                         }
-                        // else: continue moving down (state remains moving_down)
                     }
                 }
-
-                // Check if the mark has reached the end of the vertical line
-                if (mark.y >= canvas.height - MARK_FONT_SIZE) { // ゴールのマークの少し上に停まるように調整
-                    mark.y = canvas.height - MARK_FONT_SIZE; // ゴールのマークの少し上に停まるように調整
-                    mark.state = 'finished'; // Set state to finished
-                    mark.finalLineIndex = mark.currentLineIndex; // Store the final vertical line index
-                    checkGameEnd(); // Check game end conditions
+                if (mark.y >= canvas.height - MARK_FONT_SIZE) {
+                    mark.y = canvas.height - MARK_FONT_SIZE;
+                    mark.state = 'finished';
+                    mark.finalLineIndex = mark.currentLineIndex;
+                    checkGameEnd();
                 }
-
             } else if (mark.state === 'moving_horizontal_right') {
-                mark.x += MARK_SPEED; // Move right
+                mark.x += MARK_SPEED;
                 const targetX = verticalLineX[mark.targetHorizontalLineIndex];
-                // Check if the mark has reached the target vertical line
                 if (mark.x >= targetX) {
-                    mark.x = targetX; // Snap to the target X-coordinate
-                    mark.currentLineIndex = mark.targetHorizontalLineIndex; // Update current vertical line
-                    mark.state = 'moving_down'; // Change state back to moving downwards
+                    mark.x = targetX;
+                    mark.currentLineIndex = mark.targetHorizontalLineIndex;
+                    mark.state = 'moving_down';
                 }
-
             } else if (mark.state === 'moving_horizontal_left') {
-                mark.x -= MARK_SPEED; // Move left
+                mark.x -= MARK_SPEED;
                 const targetX = verticalLineX[mark.targetHorizontalLineIndex];
-                // Check if the mark has reached the target vertical line
                 if (mark.x <= targetX) {
-                    mark.x = targetX; // Snap to the target X-coordinate
-                    mark.currentLineIndex = mark.targetHorizontalLineIndex; // Update current vertical line
-                    mark.state = 'moving_down'; // Change state back to moving downwards
+                    mark.x = targetX;
+                    mark.currentLineIndex = mark.targetHorizontalLineIndex;
+                    mark.state = 'moving_down';
                 }
             }
         }
 
-        /**
-         * Game animation loop.
-         */
         function animate() {
             if (!isGameRunning) {
-                cancelAnimationFrame(animationFrameId); // Stop animation if the game is not running
+                cancelAnimationFrame(animationFrameId);
                 return;
             }
-
-            drawGame(); // Redraw the game
-            marks.forEach(updateMarkPosition); // Update position of each mark
-
-            animationFrameId = requestAnimationFrame(animate); // Request the next frame
+            drawGame();
+            marks.forEach(updateMarkPosition);
+            animationFrameId = requestAnimationFrame(animate);
         }
 
-        /**
-         * Checks game end conditions and displays the result.
-         */
         function checkGameEnd() {
             finishedMarksCount++;
-            // If all marks have reached their end point
             if (finishedMarksCount === marks.length) {
                 let allMatch = true;
-                // Check if each mark's final destination matches its target mark
                 for (const mark of marks) {
-                    // ダミーマーク（空文字列）の場合は、クリア判定に影響しないようにスキップ
-                    if (mark.char === '') {
-                        continue;
-                    }
-
-                    const actualEndMark = currentEndMarks[mark.finalLineIndex]; // Use currentEndMarks
-                    if (mark.targetEndMark !== actualEndMark) { // Compare with the target end mark stored in the mark object
-                        allMatch = false; // If not matching, it's a failure
+                    if (mark.char === '') continue;
+                    const actualEndMark = currentEndMarks[mark.finalLineIndex];
+                    if (mark.targetEndMark !== actualEndMark) {
+                        allMatch = false;
                         break;
                     }
                 }
-
                 if (allMatch) {
                     gameResult = 'clear';
-                    showResultPanel('クリア！'); // Show clear panel
+                    const clearStatus = getClearStatus();
+                    clearStatus[currentStageIndex] = true;
+                    saveClearStatus(clearStatus);
+                    showResultPanel('クリア！');
                 } else {
                     gameResult = 'fail';
-                    showResultPanel('失敗！'); // Show fail panel
+                    showResultPanel('失敗！');
                 }
-                isGameRunning = false; // Stop the game
-                goButton.disabled = true; // Disable Go! button
-                // ゲーム終了後、星のアニメーションを再開
+                isGameRunning = false;
+                goButton.textContent = 'Go!';
+                goButton.style.backgroundColor = '#48bb78';
+                goButton.disabled = true;
                 startStarAnimation();
             }
         }
 
-        /**
-         * Displays the result panel.
-         * @param {string} message - Message to display on the panel.
-         */
+        // ★ 変更: 「次へ」ボタンの表示ロジックを追加
         function showResultPanel(message) {
             resultText.textContent = message;
-            resultModal.classList.add('show'); // Add 'show' class to display
+
+            // クリア状況に応じて「次へ」ボタンの表示を切り替える
+            if (gameResult === 'clear' && currentStageIndex < GAME_PRESETS.length - 1) {
+                nextStageButton.style.display = 'inline-block';
+            } else {
+                nextStageButton.style.display = 'none';
+            }
+
+            resultModal.classList.add('show');
         }
 
-        /**
-         * Hides the result panel.
-         */
         function hideResultPanel() {
-            resultModal.classList.remove('show'); // Remove 'show' class to hide
+            resultModal.classList.remove('show');
         }
 
-        /**
-         * Resets the game to its initial state, including resetting all horizontal line patterns to p1.
-         * This is for the main "Reset" button.
-         */
         function resetGame() {
-            cancelAnimationFrame(animationFrameId); // Stop any running animation
+            cancelAnimationFrame(animationFrameId);
             isGameRunning = false;
             finishedMarksCount = 0;
             gameResult = null;
-            goButton.disabled = false; // Enable Go! button
-            hideResultPanel(); // Hide result panel
-            hideStageSelectionPanel(); // Hide stage selection panel if open
-
-            // Reset all areas' selection state and associated lines
-            areas.forEach(a => {
-                a.isSelected = false;
-                a.associatedLines = [];
-            });
-
-            // Re-initialize all game data to the first preset (p1 patterns, initial area states)
-            initializeGameData(0); // Load the first preset (this will also reset isHintActive and clear originalPatternsBeforeHint)
-
-            // Reset each mark to its initial position
-            marks = currentStartMarks.map((char, index) => ({ // Use currentStartMarks
-                id: String.fromCharCode(65 + index), // A, B, C, D
-                char: char,
-                x: verticalLineX[index],
-                y: MARK_FONT_SIZE / 2, // Initial Y-coordinate (top of vertical line)
-                originalX: verticalLineX[index],
-                originalY: MARK_FONT_SIZE / 2,
-                currentLineIndex: index,
-                currentPointIndex: -1, // Set before the first point
-                state: 'idle', // Initial state is idle
-                targetEndMark: MARK_TARGET_MAP[char], // Use MARK_TARGET_MAP here to get the intended end mark
-                finalLineIndex: -1,
-                reachedEnd: false
-            }));
-
-            drawGame(); // Redraw the game in the reset state
-            
-            // 星のアニメーションを開始/再開
-            startStarAnimation();
+            hideResultPanel(); 
+            hideStageSelectionPanel();
+            initializeGameData(currentStageIndex); 
+            softResetGame();
         }
 
-        /**
-         * Resets the game state (marks, flags, etc.) but keeps the current horizontal line patterns.
-         * This is for the "Reset" button on the result panel and when opening stage select.
-         */
         function softResetGame() {
-            cancelAnimationFrame(animationFrameId); // Stop any running animation
+            cancelAnimationFrame(animationFrameId);
             isGameRunning = false;
             finishedMarksCount = 0;
             gameResult = null;
-            goButton.disabled = false; // Enable Go! button
-            hideResultPanel(); // Hide result panel
-            // Do NOT hideStageSelectionPanel() here, as this function is called before showing it.
-
-            // Reset all areas' selection state and associated lines
-            areas.forEach(a => {
-                a.isSelected = false;
-                a.associatedLines = [];
-            });
-
-            // Do NOT call initializeGameData() here, so horizontal line patterns are preserved.
-            // ladderMap is already reflecting the current patterns from previous area clicks.
-
-            // Reset hint state and clear stored patterns when soft resetting
+            goButton.disabled = false;
+            goButton.textContent = 'Go!';
+            goButton.style.backgroundColor = '#48bb78';
+            hideResultPanel();
+            areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
             isHintActive = false;
             hintButton.classList.remove('active');
             originalPatternsBeforeHint = [];
-
-            // Reset each mark to its initial position
-            marks = currentStartMarks.map((char, index) => ({ // Use currentStartMarks
-                id: String.fromCharCode(65 + index), // A, B, C, D
-                char: char,
-                x: verticalLineX[index],
-                y: MARK_FONT_SIZE / 2, // Initial Y-coordinate (top of vertical line)
-                originalX: verticalLineX[index],
-                originalY: MARK_FONT_SIZE / 2,
-                currentLineIndex: index,
-                currentPointIndex: -1, // Set before the first point
-                state: 'idle', // Initial state is idle
-                targetEndMark: MARK_TARGET_MAP[char], // Use MARK_TARGET_MAP here to get the intended end mark
-                finalLineIndex: -1,
-                reachedEnd: false
+            marks = currentStartMarks.map((char, index) => ({
+                id: String.fromCharCode(65 + index), char: char, x: verticalLineX[index], y: MARK_FONT_SIZE / 2,
+                originalX: verticalLineX[index], originalY: MARK_FONT_SIZE / 2,
+                currentLineIndex: index, currentPointIndex: -1, state: 'idle',
+                targetEndMark: MARK_TARGET_MAP[char], finalLineIndex: -1, reachedEnd: false
             }));
-
-            drawGame(); // Redraw the game in the reset state
-
-            // 星のアニメーションを開始/再開
+            drawGame();
             startStarAnimation();
         }
 
-        /**
-         * Populates and displays the stage selection panel.
-         */
         function showStageSelectionPanel() {
-            softResetGame(); // Reset game state but preserve patterns
-            stageButtonsContainer.innerHTML = ''; // Clear previous buttons
-
-            // Calculate stage button size based on the current modal height
+            softResetGame(); 
+            stageButtonsContainer.innerHTML = ''; 
+            const clearStatus = getClearStatus();
             const currentStageSelectModalContent = document.querySelector('#stageSelectModal .modal-content');
-            const currentStageSelectModalHeight = currentStageSelectModalContent ? parseFloat(currentStageSelectModalContent.style.maxHeight) : 270; // Fallback if not yet set
-            const stageButtonSize = currentStageSelectModalHeight / 5; // 1/5に変更
-
+            const currentStageSelectModalHeight = currentStageSelectModalContent ? parseFloat(currentStageSelectModalContent.style.maxHeight) : 270; 
+            const stageButtonSize = currentStageSelectModalHeight / 5; 
             GAME_PRESETS.forEach((preset, index) => {
                 const button = document.createElement('button');
                 button.textContent = `Stage ${index + 1}`;
                 button.classList.add('stage-button');
-                button.style.width = `${stageButtonSize}px`; // Set width dynamically
-                button.style.height = `${stageButtonSize}px`; // Set height dynamically
+                button.style.width = `${stageButtonSize}px`; 
+                button.style.height = `${stageButtonSize}px`;
+                if (clearStatus[index]) {
+                    button.classList.add('cleared');
+                }
                 if (index === currentStageIndex) {
                     button.classList.add('current-stage');
                 }
                 button.addEventListener('click', () => handleStageButtonClick(index));
                 stageButtonsContainer.appendChild(button);
             });
-
-            stageSelectModal.classList.add('show'); // Show the modal
-
-            // Center the current stage button in the scrollable view
+            stageSelectModal.classList.add('show');
             const currentStageButtonElement = stageButtonsContainer.querySelector('.current-stage');
             if (currentStageButtonElement) {
-                // Ensure layout is complete before attempting to scroll
                 requestAnimationFrame(() => {
-                    const containerHeight = stageButtonsFrame.clientHeight; // Use stageButtonsFrame for scrolling
+                    const containerHeight = stageButtonsFrame.clientHeight;
                     const buttonOffsetTop = currentStageButtonElement.offsetTop;
                     const buttonHeight = currentStageButtonElement.offsetHeight;
-                    // Calculate scroll position to center the button
                     stageButtonsFrame.scrollTop = buttonOffsetTop - (containerHeight / 2) + (buttonHeight / 2);
                 });
             }
         }
 
-        /**
-         * Hides the stage selection panel.
-         */
         function hideStageSelectionPanel() {
             stageSelectModal.classList.remove('show');
         }
 
-        /**
-         * Handles a click on a stage selection button.
-         * @param {number} index - The index of the selected stage preset.
-         */
         function handleStageButtonClick(index) {
-            initializeGameData(index); // Load the selected preset (this will also reset isHintActive and clear originalPatternsBeforeHint)
-            softResetGame(); // Apply new preset settings and reset marks/game state
-            hideStageSelectionPanel(); // Close the panel
+            initializeGameData(index);
+            softResetGame();
+            hideStageSelectionPanel();
         }
 
-        // 星のアニメーションを開始する関数
         function startStarAnimation() {
-            stopStarAnimation(); // 既存のアニメーションがあれば停止
+            stopStarAnimation();
             starAnimationInterval = setInterval(() => {
-                // ゲーム実行中はanimate()が描画を担当するため、ここでは描画しない
-                if (!isGameRunning) {
-                    drawGame();
-                }
-            }, 1000 / 30); // 30fpsで描画
+                if (!isGameRunning) drawGame();
+            }, 1000 / 30);
         }
 
-        // 星のアニメーションを停止する関数
         function stopStarAnimation() {
             if (starAnimationInterval) {
                 clearInterval(starAnimationInterval);
@@ -1617,34 +1236,39 @@
 
         // Event listeners
         goButton.addEventListener('click', () => {
-            if (!isGameRunning) {
-                // Go!ボタンを押したら星のアニメーションを停止
+            if (isGameRunning) {
+                softResetGame();
+            } else {
                 stopStarAnimation();
-
                 isGameRunning = true;
-                goButton.disabled = true; // Disable Go! button
-                marks.forEach(mark => mark.state = 'moving_down'); // Set all marks to moving state
-                animate(); // Start animation
+                marks.forEach(mark => mark.state = 'moving_down');
+                goButton.textContent = 'Stop';
+                goButton.style.backgroundColor = '#dd6b20'; 
+                animate();
             }
         });
 
         resetButton.addEventListener('click', resetGame);
         modalResetButton.addEventListener('click', softResetGame);
-        stageButton.addEventListener('click', showStageSelectionPanel); // New stage button event listener
-        hintButton.addEventListener('click', toggleHint); // HINT button event listener now calls toggleHint
-
-        // Close stage select panel when clicking outside its content
-        stageSelectModal.addEventListener('click', (event) => {
-            if (event.target === stageSelectModal) { // Only close if clicking on the overlay itself, not the content
-                hideStageSelectionPanel();
+        
+        // ★ 追加: 「次へ」ボタンのイベントリスナー
+        nextStageButton.addEventListener('click', () => {
+            if (currentStageIndex < GAME_PRESETS.length - 1) {
+                handleStageButtonClick(currentStageIndex + 1);
             }
         });
 
-        // Window resize event and initial load event
+        stageButton.addEventListener('click', showStageSelectionPanel);
+        hintButton.addEventListener('click', toggleHint);
+        stageSelectModal.addEventListener('click', (event) => {
+            if (event.target === stageSelectModal) {
+                hideStageSelectionPanel();
+            }
+        });
         window.addEventListener('resize', resizeCanvas);
         window.onload = function () {
-            resizeCanvas(); // Initial resize and coordinate setup (includes area setup)
-            resetGame(); // This will call initializeGameData() for initial setup and reset marks/areas
+            resizeCanvas();
+            resetGame();
             canvas.addEventListener('click', handleCanvasClick);
             canvas.addEventListener('touchstart', handleCanvasClick);
         };
