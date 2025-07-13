@@ -35,12 +35,23 @@
             /* 幅と高さはJavaScriptで設定されます */
         }
 
-        /* キャンバスとHINTボタンを横並びにするコンテナ */
-        #canvasAndHintContainer {
+        /* キャンバスとサイドボタン群を横並びにするコンテナ */
+        #canvasAndControlsContainer {
             display: flex;
             align-items: center; /* 垂直方向の中央揃え */
             gap: 1rem; /* キャンバスとボタンの間のスペース */
             margin-bottom: 1.5rem; /* ボタンコンテナとの間にマージン */
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* StageとHintボタンを縦に並べるコンテナ */
+        #sideButtonsContainer {
+            display: flex;
+            flex-direction: column; /* 縦に並べる */
+            justify-content: center; /* 垂直方向に中央寄せ */
+            align-items: center; /* 水平方向に中央揃え */
+            gap: 1rem; /* ボタン間のスペース */
         }
 
         /* キャンバスのスタイル */
@@ -65,6 +76,10 @@
             cursor: pointer;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            white-space: nowrap; /* ボタンテキストが改行しないようにする */
         }
         .game-button:hover {
             transform: translateY(-2px); /* ホバー時に少し上に移動 */
@@ -94,10 +109,7 @@
         #hintButton {
             background-color: #e53e3e; /* 赤色 */
             color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            /* font-sizeはJSで動的に設定されるため、ここでは削除 */
+            padding: 0; /* JSでサイズ制御するためpaddingをリセット */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease-in-out;
             cursor: pointer;
@@ -144,14 +156,12 @@
         .modal-overlay.show .modal-content {
             transform: scale(1); /* 表示時に元のサイズに */
         }
-        /* ★ 追加: 結果モーダルのボタンコンテナ */
         #resultModal .modal-button-container {
             display: flex;
             justify-content: center;
             gap: 1rem;
             margin-top: 1.5rem;
         }
-        /* ★ 追加: 結果モーダルのボタン共通スタイル */
         #resultModal .modal-action-button {
             padding: 0.75rem 1.5rem;
             border-radius: 0.75rem;
@@ -163,12 +173,10 @@
         #resultModal .modal-action-button:hover {
             transform: translateY(-2px);
         }
-        /* ★ 追加: 結果モーダルのリセットボタンスタイル */
         #modalResetButton {
             background-color: #4299e1; /* 青色 */
             color: white;
         }
-        /* ★ 追加: 次へボタンのスタイル */
         #nextStageButton {
             background-color: #48bb78; /* 緑色 */
             color: white;
@@ -176,40 +184,34 @@
 
         /* ステージ選択パネルのスタイル */
         #stageSelectModal .modal-content {
-            /* max-heightとwidthはJSで動的に設定されるため、ここでは削除 */
             display: flex;
             flex-direction: column;
-            gap: 0.5rem; /* ボタン間のスペース */
-            padding: 1rem; /* コンテンツのパディングを維持 */
-            box-sizing: border-box; /* パディングを幅/高さに含める */
+            gap: 0.5rem;
+            padding: 1rem;
+            box-sizing: border-box;
         }
-        /* ステージ選択パネルのタイトルを小さくする */
-        /* font-sizeとmargin-bottomはJSで動的に設定されるため、ここでは削除 */
         #stageSelectModal .modal-content h2 {
             /* font-size and margin-bottom are set dynamically in JS */
         }
-        /* ステージボタンを囲むスクロール可能な枠 */
         #stageSelectModal #stageButtonsFrame {
-            /* height, flex-grow, min-heightはJSで動的に設定されるため、ここでは削除 */
-            overflow-y: auto; /* スクロール可能にする */
-            border: 1px solid #ecc94b; /* 黄色に変更し、ショートハンドで指定 */
-            border-radius: 0.5rem; /* 枠の角を丸くする */
-            padding: 0.5rem; /* 枠の内側のパディング */
-            background-color: #1a202c; /* 枠の背景色 */
-            box-sizing: border-box; /* Ensure padding is included in height */
+            overflow-y: auto;
+            border: 1px solid #ecc94b;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            background-color: #1a202c;
+            box-sizing: border-box;
         }
-        /* スクロール枠内のボタンコンテナ */
         #stageButtonsContainer {
             display: flex;
-            flex-direction: row; /* ボタンを横に並べる */
-            flex-wrap: wrap; /* ボタンを折り返す */
-            justify-content: flex-start; /* 左寄せ */
-            gap: 0.5rem; /* ボタン間のスペース */
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 0.5rem;
         }
         .stage-button {
-            background-color: #4299e1; /* デフォルトを水色に変更 */
+            background-color: #4299e1;
             color: white;
-            padding: 0; /* 幅と高さを固定するためパディングを削除 */
+            padding: 0;
             border-radius: 0.5rem;
             font-weight: bold;
             cursor: pointer;
@@ -220,34 +222,39 @@
             align-items: center;
             font-size: 0.875rem;
             flex-shrink: 0;
-            border: 2px solid transparent; /* 枠線用のスペースを確保 */
+            border: 2px solid transparent;
         }
         .stage-button:hover {
-            background-color: #3182ce; /* 水色のホバー色 */
+            background-color: #3182ce;
         }
         .stage-button.cleared {
-            background-color: #ecc94b; /* 黄色 */
-            color: #2d3748; /* 暗いテキスト色 */
+            background-color: #ecc94b;
+            color: #2d3748;
         }
         .stage-button.cleared:hover {
-            background-color: #d69e2e; /* 暗い黄色 */
+            background-color: #d69e2e;
         }
         .stage-button.current-stage {
-            border-color: #f87171; /* 赤い枠線 */
+            border-color: #f87171;
         }
     </style>
 </head>
 <body>
     <div id="gameWrapper">
         <h1 class="text-3xl font-bold mb-6">あみだくじゲーム</h1>
-        <div id="canvasAndHintContainer">
+        
+        <div id="canvasAndControlsContainer">
             <canvas id="amidakujiCanvas"></canvas>
-            <button id="hintButton" class="game-button">HINT</button>
+            
+            <div id="sideButtonsContainer">
+                <button id="stageButton" class="game-button">Stage</button>
+                <button id="resetButton" class="game-button">リセット</button>
+                <button id="hintButton" class="game-button">HINT</button>
+            </div>
         </div>
+
         <div class="button-container">
-            <button id="stageButton" class="game-button">Stage</button>
-            <button id="goButton" class="game-button">Go!</button>
-            <button id="resetButton" class="game-button">リセット</button>
+             <button id="goButton" class="game-button">Go!</button>
         </div>
     </div>
 
@@ -283,29 +290,19 @@
         let LINE_START_Y = 50; // LINE_START_Yをletに変更し、初期値を設定
 
         // Define symbolic names for horizontal connection points (point indices)
-        const P1 = 0; // Point index 0
-        const P2 = 1; // Point index 1
-        const P3 = 2; // Point index 2
-        const P4 = 3; // Point index 4
-        const P5 = 4; // Point index 5
-        const P6 = 5; // Point index 6
-        const P7 = 6; // Point index 7
-        const P8 = 7; // Point index 8
-        const P9 = 8; // Point index 9
+        const P1 = 0; const P2 = 1; const P3 = 2; const P4 = 3; const P5 = 4;
+        const P6 = 5; const P7 = 6; const P8 = 7; const P9 = 8;
 
         // Define symbolic names and fixed connection points for each horizontal line.
-        // These objects do NOT contain pattern information, only the fixed geometry.
         const H_LINE_A1_B1 = { fromLine: 0, fromPoint: P1, toLine: 1, toPoint: P1 };
         const H_LINE_A3_B3 = { fromLine: 0, fromPoint: P3, toLine: 1, toPoint: P3 };
         const H_LINE_A4_B4 = { fromLine: 0, fromPoint: P4, toLine: 1, toPoint: P4 };
         const H_LINE_A6_B6 = { fromLine: 0, fromPoint: P6, toLine: 1, toPoint: P6 };
         const H_LINE_A7_B7 = { fromLine: 0, fromPoint: P7, toLine: 1, toPoint: P7 };
         const H_LINE_A9_B9 = { fromLine: 0, fromPoint: P9, toLine: 1, toPoint: P9 };
-
         const H_LINE_B2_C2 = { fromLine: 1, fromPoint: P2, toLine: 2, toPoint: P2 };
         const H_LINE_B5_C5 = { fromLine: 1, fromPoint: P5, toLine: 2, toPoint: P5 };
         const H_LINE_B8_C8 = { fromLine: 1, fromPoint: P8, toLine: 2, toPoint: P8 };
-
         const H_LINE_C1_D1 = { fromLine: 2, fromPoint: P1, toLine: 3, toPoint: P1 };
         const H_LINE_C3_D3 = { fromLine: 2, fromPoint: P3, toLine: 3, toPoint: P3 };
         const H_LINE_C4_D4 = { fromLine: 2, fromPoint: P4, toLine: 3, toPoint: P4 };
@@ -313,265 +310,122 @@
         const H_LINE_C7_D7 = { fromLine: 2, fromPoint: P7, toLine: 3, toPoint: P7 };
         const H_LINE_C9_D9 = { fromLine: 2, fromPoint: P9, toLine: 3, toPoint: P9 };
 
-
-        // Mapping of start marks to corresponding end marks (fixed mapping)
         const MARK_TARGET_MAP = {
-            '⭐️': '🌟',
-            '💔': '❤️',
-            '☘️': '🌱',
-            '💠': '💎',
-            '🍎': '🍏',
-            '🍌': '🍋',
-            '🍇': '🫐',
-            '🍊': '🍑',
-            '🐶': '🐕',
-            '🐱': '🐈',
-            '🐭': '🐁',
-            '🐹': '🐹',
-            '☀️': '🌞',
-            '☁️': '⛅',
-            '🌧️': '☔',
-            '⚡': '🌩️',
-            '⚽': '🥅',
-            '🏀': ' hoop',
-            '🏈': ' touchdown',
-            '⚾': ' home run',
-            '💡': '✨',
-            '🔑': '🗝️',
-            '🔗': '⛓️',
-            '🔒': '🔓',
-            '⬆️': '⏫',
-            '⬇️': '⏬',
-            '⬅️': '⏪',
-            '➡️': '⏩'
+            '⭐️': '🌟', '💔': '❤️', '☘️': '🌱', '💠': '💎', '🍎': '🍏', '🍌': '🍋', '🍇': '🫐', '🍊': '🍑',
+            '🐶': '🐕', '🐱': '🐈', '🐭': '🐁', '🐹': '🐹', '☀️': '🌞', '☁️': '⛅', '🌧️': '☔', '⚡': '🌩️',
+            '⚽': '🥅', '🏀': ' hoop', '🏈': ' touchdown', '⚾': ' home run', '💡': '✨', '🔑': '🗝️',
+            '🔗': '⛓️', '🔒': '🔓', '⬆️': '⏫', '⬇️': '⏬', '⬅️': '⏪', '➡️': '⏩'
         };
 
-        // Colors for the 12 areas (3 new colors added)
         const AREA_COLORS = [
-            '#FF6347', '#4682B4', '#32CD32', // Row 1: Tomato, SteelBlue, LimeGreen
-            '#FFD700', '#DA70D6', '#00CED1', // Row 2: Gold, Orchid, DarkTurquoise
-            '#FF4500', '#8A2BE2', '#ADFF2F',  // Row 3: OrangeRed, BlueViolet, GreenYellow
-            '#FFB6C1', '#87CEEB', '#98FB98'   // New Row: LightPink, SkyBlue, PaleGreen
+            '#FF6347', '#4682B4', '#32CD32', '#FFD700', '#DA70D6', '#00CED1',
+            '#FF4500', '#8A2BE2', '#ADFF2F', '#FFB6C1', '#87CEEB', '#98FB98'
         ];
 
-        // Game Presets Array
-        // Each element in this array represents a complete game configuration.
         const GAME_PRESETS = [
             {
-                // Preset 0: Current game configuration (Initial)
-                startMarks: ['⭐️', '', '', '💠'], // 2番目と3番目のマークをダミー（空文字列）に設定
-                endMarks: ['🌟', '❤️', '🌱', '💎'],
+                startMarks: ['⭐️', '', '', '💠'], endMarks: ['🌟', '❤️', '🌱', '💎'],
                 horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A3_B3, patterns: { p1: 'n', p2: 'a' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_C1_D1, patterns: { p1: 'l', p2: 'a' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'r', p2: 'a' } },
-                    { line: H_LINE_C4_D4, patterns: { p1: 'r', p2: 'a' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'r', p2: 'a' } },
-                    { line: H_LINE_C7_D7, patterns: { p1: 'r', p2: 'a' } },
+                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A3_B3, patterns: { p1: 'n', p2: 'a' } },
+                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_C1_D1, patterns: { p1: 'l', p2: 'a' } },
+                    { line: H_LINE_C3_D3, patterns: { p1: 'r', p2: 'a' } }, { line: H_LINE_C4_D4, patterns: { p1: 'r', p2: 'a' } },
+                    { line: H_LINE_C6_D6, patterns: { p1: 'r', p2: 'a' } }, { line: H_LINE_C7_D7, patterns: { p1: 'r', p2: 'a' } },
                     { line: H_LINE_C9_D9, patterns: { p1: 'r', p2: 'a' } }
                 ],
-                areaOnStates: [
-                    true, true, false, // Original 9 areas
-                    true, true, false,
-                    false, true, true,
-                    true, true, true  // New 3 areas (Area 9, 10, 11)
-                ],
-                // HINTS for preset 0: area 0 to p2, area 5 to p1
+                areaOnStates: [ true, true, false, true, true, false, false, true, true, true, true, true ],
                 hints: [[0, 'p2'], [5, 'p1']]
             },
             {
-                // Preset 1: More active lines, different area states
-                startMarks: ['🍎', '🍌', '🍇', '🍊'],
-                endMarks: ['🍏', '🍋', '🫐', '🍑'],
+                startMarks: ['🍎', '🍌', '🍇', '🍊'], endMarks: ['🍏', '🍋', '🫐', '🍑'],
                 horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'n', p2: 'a' } },
-                    { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'n', p2: 'a' } },
-                    { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_B2_C2, patterns: { p1: 'n', p2: 'a' } },
-                    { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'n', p2: 'a' } },
-
-                    { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'l' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'a', p2: 'r' } },
-                    { line: H_LINE_C4_D4, patterns: { p1: 'n', p2: 'a' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'l' } },
-                    { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'r' } },
+                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_A4_B4, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'a' } },
+                    { line: H_LINE_A7_B7, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_B2_C2, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'a' } },
+                    { line: H_LINE_B8_C8, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'l' } },
+                    { line: H_LINE_C3_D3, patterns: { p1: 'a', p2: 'r' } }, { line: H_LINE_C4_D4, patterns: { p1: 'n', p2: 'a' } },
+                    { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'l' } }, { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'r' } },
                     { line: H_LINE_C9_D9, patterns: { p1: 'n', p2: 'a' } }
                 ],
-                areaOnStates: [
-                    true, false, true,
-                    false, true, true,
-                    true, false, true,
-                    false, true, false // New 3 areas
-                ],
-                // HINTS for preset 1: area 1 to p2, area 7 to p1
+                areaOnStates: [ true, false, true, false, true, true, true, false, true, false, true, false ],
                 hints: [[1, 'p2'], [7, 'p1']]
             },
             {
-                // Preset 2: Fewer active lines, different area states
-                startMarks: ['🐶', '🐱', '🐭', '🐹'],
-                endMarks: ['🐕', '🐈', '🐁', '🐹'], // Note: Hamster stays hamster
+                startMarks: ['🐶', '🐱', '🐭', '🐹'], endMarks: ['🐕', '🐈', '🐁', '🐹'],
                 horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A3_B3, patterns: { p1: 'n', p2: 'n' } }, // Always off
-                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A6_B6, patterns: { p1: 'n', p2: 'n' } }, // Always off
-                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A9_B9, patterns: { p1: 'n', p2: 'n' } }, // Always off
-
-                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B5_C5, patterns: { p1: 'n', p2: 'n' } }, // Always off
-                    { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'n', p2: 'n' } }, // Always off
-                    { line: H_LINE_C4_D4, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'n', p2: 'n' } }, // Always off
-                    { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'n', p2: 'n' } }  // Always off
+                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A3_B3, patterns: { p1: 'n', p2: 'n' } },
+                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A6_B6, patterns: { p1: 'n', p2: 'n' } },
+                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A9_B9, patterns: { p1: 'n', p2: 'n' } },
+                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_B5_C5, patterns: { p1: 'n', p2: 'n' } },
+                    { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_C3_D3, patterns: { p1: 'n', p2: 'n' } }, { line: H_LINE_C4_D4, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_C6_D6, patterns: { p1: 'n', p2: 'n' } }, { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_C9_D9, patterns: { p1: 'n', p2: 'n' } }
                 ],
-                areaOnStates: [
-                    false, true, false,
-                    true, false, true,
-                    false, true, false,
-                    true, false, true // New 3 areas
-                ],
-                hints: [[3, 'p2']] // HINTS for preset 2: area 3 to p2
+                areaOnStates: [ false, true, false, true, false, true, false, true, false, true, false, true ],
+                hints: [[3, 'p2']]
             },
             {
-                // Preset 3: Complex patterns, all areas on
-                startMarks: ['☀️', '☁️', '🌧️', '⚡'],
-                endMarks: ['🌞', '⛅', '☔', '🌩️'],
+                startMarks: ['☀️', '☁️', '🌧️', '⚡'], endMarks: ['🌞', '⛅', '☔', '🌩️'],
                 horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'l', p2: 'r' } },
-                    { line: H_LINE_A3_B3, patterns: { p1: 'r', p2: 'l' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A6_B6, patterns: { p1: 'l', p2: 'a' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'r', p2: 'a' } },
-                    { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'l' } },
-                    { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'r' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'n', p2: 'a' } },
-
-                    { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'l', p2: 'r' } },
-                    { line: H_LINE_C4_D4, patterns: { p1: 'r', p2: 'l' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C7_D7, patterns: { p1: 'l', p2: 'a' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'r', p2: 'a' } }  // Reversed
+                    { line: H_LINE_A1_B1, patterns: { p1: 'l', p2: 'r' } }, { line: H_LINE_A3_B3, patterns: { p1: 'r', p2: 'l' } },
+                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A6_B6, patterns: { p1: 'l', p2: 'a' } },
+                    { line: H_LINE_A7_B7, patterns: { p1: 'r', p2: 'a' } }, { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'l' } }, { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'r' } },
+                    { line: H_LINE_B8_C8, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_C3_D3, patterns: { p1: 'l', p2: 'r' } }, { line: H_LINE_C4_D4, patterns: { p1: 'r', p2: 'l' } },
+                    { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_C7_D7, patterns: { p1: 'l', p2: 'a' } },
+                    { line: H_LINE_C9_D9, patterns: { p1: 'r', p2: 'a' } }
                 ],
-                areaOnStates: [
-                    true, true, true,
-                    true, true, true,
-                    true, true, true,
-                    true, true, true // New 3 areas
-                ],
-                hints: [] // No hints for preset 3
+                areaOnStates: [ true, true, true, true, true, true, true, true, true, true, true, true ],
+                hints: []
             },
             {
-                // Preset 4: All lines active, some areas off
-                startMarks: ['⚽', '🏀', '🏈', '⚾'],
-                endMarks: ['🥅', ' hoop', ' touchdown', ' home run'],
+                startMarks: ['⚽', '🏀', '🏈', '⚾'], endMarks: ['🥅', ' hoop', ' touchdown', ' home run'],
                 horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'a' } },
-
-                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'a' } },
-
-                    { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_C4_D4, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'a' } },
+                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'a' } },
+                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'a' } },
+                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'a' } },
+                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'a' } },
+                    { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'a' } },
+                    { line: H_LINE_C3_D3, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_C4_D4, patterns: { p1: 'a', p2: 'a' } },
+                    { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'a' } },
                     { line: H_LINE_C9_D9, patterns: { p1: 'a', p2: 'a' } }
                 ],
-                areaOnStates: [
-                    true, true, false,
-                    true, false, true,
-                    false, true, true,
-                    true, false, true // New 3 areas
-                ],
-                hints: [] // No hints for preset 4
+                areaOnStates: [ true, true, false, true, false, true, false, true, true, true, false, true ],
+                hints: []
             },
             {
-                // Preset 5: Sparse connections, mixed area states
-                startMarks: ['💡', '🔑', '🔗', '🔒'],
-                endMarks: ['✨', '🗝️', '⛓️', '🔓'],
+                startMarks: ['💡', '🔑', '🔗', '🔒'], endMarks: ['✨', '🗝️', '⛓️', '🔓'],
                 horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_C3_D3, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_C3_D3, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'n' } },
                     { line: H_LINE_C9_D9, patterns: { p1: 'a', p2: 'n' } }
                 ],
-                areaOnStates: [
-                    true, false, false,
-                    false, true, false,
-                    false, false, true,
-                    true, true, false // New 3 areas
-                ],
-                hints: [] // No hints for preset 5
+                areaOnStates: [ true, false, false, false, true, false, false, false, true, true, true, false ],
+                hints: []
             },
             {
-                // Preset 6: Reversed patterns for some lines, all areas on
-                startMarks: ['⬆️', '⬇️', '⬅️', '➡️'],
-                endMarks: ['⏫', '⏬', '⏪', '⏩'],
+                startMarks: ['⬆️', '⬇️', '⬅️', '➡️'], endMarks: ['⏫', '⏬', '⏪', '⏩'],
                 horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'n', p2: 'a' } }, // Reversed
-                    { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'n', p2: 'a' } }, // Reversed
-                    { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'n', p2: 'a' } }, // Reversed
-                    { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
-
-                    { line: H_LINE_B2_C2, patterns: { p1: 'n', p2: 'a' } }, // Reversed
-                    { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'n', p2: 'a' } }, // Reversed
-
-                    { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'l' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'r', p2: 'a' } }, // Reversed
-                    { line: H_LINE_C4_D4, patterns: { p1: 'a', p2: 'r' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'l', p2: 'a' } }, // Reversed
-                    { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'l' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'r', p2: 'a' } }  // Reversed
+                    { line: H_LINE_A1_B1, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_A4_B4, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_A7_B7, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_B2_C2, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE_B8_C8, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'l' } },
+                    { line: H_LINE_C3_D3, patterns: { p1: 'r', p2: 'a' } }, { line: H_LINE_C4_D4, patterns: { p1: 'a', p2: 'r' } },
+                    { line: H_LINE_C6_D6, patterns: { p1: 'l', p2: 'a' } }, { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'l' } },
+                    { line: H_LINE_C9_D9, patterns: { p1: 'r', p2: 'a' } }
                 ],
-                areaOnStates: [
-                    true, true, true,
-                    true, true, true,
-                    true, true, true,
-                    true, true, true // New 3 areas
-                ],
-                hints: [] // No hints for preset 6
+                areaOnStates: [ true, true, true, true, true, true, true, true, true, true, true, true ],
+                hints: []
             }
         ];
-
 
         // Get DOM elements
         const canvas = document.getElementById('amidakujiCanvas');
@@ -583,7 +437,7 @@
         const resultModal = document.getElementById('resultModal');
         const resultText = document.getElementById('resultText');
         const modalResetButton = document.getElementById('modalResetButton');
-        const nextStageButton = document.getElementById('nextStageButton'); // ★ 追加
+        const nextStageButton = document.getElementById('nextStageButton');
         const stageSelectModal = document.getElementById('stageSelectModal');
         const stageButtonsFrame = document.getElementById('stageButtonsFrame');
         const stageButtonsContainer = document.getElementById('stageButtonsContainer');
@@ -609,14 +463,11 @@
         let leftOnlyLines = [];
         let rightOnlyLines = [];
         let starAnimationInterval = null;
+        let particles = []; // ★★★ 追加・変更点 ★★★ パーティクルを管理する配列
 
-        // ローカルストレージ関連のヘルパー関数
         function getClearStatus() {
             const status = localStorage.getItem(CLEAR_STATUS_STORAGE_KEY);
-            if (status) {
-                return JSON.parse(status);
-            }
-            return new Array(GAME_PRESETS.length).fill(false);
+            return status ? JSON.parse(status) : new Array(GAME_PRESETS.length).fill(false);
         }
 
         function saveClearStatus(statusArray) {
@@ -638,8 +489,7 @@
         }
 
         function isPointInRect(x, y, rect) {
-            return x >= rect.x && x <= rect.x + rect.width &&
-                   y >= rect.y && y <= rect.y + rect.height;
+            return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
         }
 
         function setupCoordinates() {
@@ -688,8 +538,7 @@
                 { x: baseX_BC_center + areaWidth * 0.1, y: baseY_section4 + largeAreaHeight * 0.1, width: areaWidth, height: largeAreaHeight },
                 { x: baseX_CD_center, y: baseY_section4 - largeAreaHeight * 0.05, width: areaWidth, height: largeAreaHeight }
             ].map((pos, index) => ({
-                x: pos.x, y: pos.y, width: pos.width, height: pos.height,
-                isSelected: false, associatedLines: [], color: AREA_COLORS[index], isOn: false
+                ...pos, isSelected: false, associatedLines: [], color: AREA_COLORS[index], isOn: false
             }));
             MARK_FONT_SIZE = canvas.height * 0.05;
         }
@@ -697,23 +546,17 @@
         function associateHorizontalLinesWithArea(targetArea) {
             targetArea.associatedLines = [];
             allHorizontalConnections.forEach(conn => {
-                const attribute = conn.patterns[conn.currentActivePattern];
                 const x1 = verticalLineX[conn.fromLine];
                 const y1 = pointY[conn.fromPoint];
                 const x2 = verticalLineX[conn.toLine];
                 const midX = (x1 + x2) / 2;
                 const midY = y1;
                 if (isPointInRect(midX, midY, targetArea)) {
-                    targetArea.associatedLines.push({
-                        fromLine: conn.fromLine, fromPoint: conn.fromPoint,
-                        toLine: conn.toLine, toPoint: conn.toPoint,
-                        midX: midX, midY: midY, attribute: attribute,
-                        originalConnection: conn
-                    });
+                    targetArea.associatedLines.push({ originalConnection: conn });
                 }
             });
         }
-
+        
         function handleCanvasClick(event) {
             if (isGameRunning || stageSelectModal.classList.contains('show')) return;
             const rect = canvas.getBoundingClientRect();
@@ -730,23 +573,21 @@
                 const currentArea = areas[i];
                 const isCurrentAreaHint = GAME_PRESETS[currentStageIndex].hints.some(hint => hint[0] === i);
                 if (isHintActive && isCurrentAreaHint) continue;
-                if (isPointInRect(mouseX, mouseY, currentArea)) {
-                    if (currentArea.isOn) {
-                        clickedOnActiveArea = true;
-                        if (currentArea.isSelected) {
-                            currentArea.associatedLines.forEach(associatedLine => {
-                                const originalConn = associatedLine.originalConnection;
-                                originalConn.currentActivePattern = (originalConn.currentActivePattern === 'p1') ? 'p2' : 'p1';
-                            });
-                            areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
-                            initializeLadderMap();
-                        } else {
-                            areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
-                            currentArea.isSelected = true;
-                            associateHorizontalLinesWithArea(currentArea);
-                        }
-                        break;
+                if (isPointInRect(mouseX, mouseY, currentArea) && currentArea.isOn) {
+                    clickedOnActiveArea = true;
+                    if (currentArea.isSelected) {
+                        currentArea.associatedLines.forEach(associatedLine => {
+                            const originalConn = associatedLine.originalConnection;
+                            originalConn.currentActivePattern = (originalConn.currentActivePattern === 'p1') ? 'p2' : 'p1';
+                        });
+                        areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
+                        initializeLadderMap();
+                    } else {
+                        areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
+                        currentArea.isSelected = true;
+                        associateHorizontalLinesWithArea(currentArea);
                     }
+                    break;
                 }
             }
             if (!clickedOnActiveArea) {
@@ -776,7 +617,11 @@
             const buttonHeightEstimate = (0.75 * 16 * 2) + (16 * 1) + (1.5 * 16);
             const wrapperPadding = 2 * 16;
             const canvasAvailableHeight = wrapperHeight - titleHeightEstimate - buttonHeightEstimate - wrapperPadding;
-            const canvasAvailableWidth = wrapperWidth - wrapperPadding - 50 - 16;
+            
+            const sideButtonsWidthEstimate = 140; 
+            const gap = 16;
+            const canvasAvailableWidth = wrapperWidth - wrapperPadding - sideButtonsWidthEstimate - gap;
+
             const canvasInternalAspectRatio = 4 / 3;
             let currentCanvasWidth, currentCanvasHeight;
             if (canvasAvailableWidth / canvasAvailableHeight > canvasInternalAspectRatio) {
@@ -789,22 +634,24 @@
             canvas.width = currentCanvasWidth;
             canvas.height = currentCanvasHeight;
             MARK_SPEED = (canvas.height / TARGET_ANIMATION_SECONDS) / 60;
+
             const buttonSize = Math.min(currentCanvasHeight / 10, 50);
+
             hintButton.style.width = `${buttonSize}px`;
             hintButton.style.height = `${buttonSize}px`;
             hintButton.style.borderRadius = `${buttonSize * 0.1}px`;
             hintButton.style.fontSize = `${buttonSize / 2}px`;
+            
             stageButton.style.height = `${buttonSize}px`;
-            goButton.style.height = `${buttonSize}px`;
             resetButton.style.height = `${buttonSize}px`;
-            const currentFontSize = parseFloat(getComputedStyle(stageButton).fontSize);
+            goButton.style.height = `${buttonSize}px`;
+
+            const currentFontSize = parseFloat(getComputedStyle(goButton).fontSize);
             const buttonPaddingY = (buttonSize - currentFontSize) / 2;
-            stageButton.style.paddingTop = `${buttonPaddingY}px`;
-            stageButton.style.paddingBottom = `${buttonPaddingY}px`;
+            
             goButton.style.paddingTop = `${buttonPaddingY}px`;
             goButton.style.paddingBottom = `${buttonPaddingY}px`;
-            resetButton.style.paddingTop = `${buttonPaddingY}px`;
-            resetButton.style.paddingBottom = `${buttonPaddingY}px`;
+
             let stageSelectModalHeight = Math.min(currentCanvasHeight * 3 / 4, 270);
             let stageSelectModalWidth = stageSelectModalHeight * (3 / 2);
             const stageSelectModalContent = document.querySelector('#stageSelectModal .modal-content');
@@ -825,6 +672,7 @@
                 stageButtonsFrame.style.flexGrow = '0';
                 stageButtonsFrame.style.minHeight = 'auto';
             }
+
             setupCoordinates();
             if (oldOnStates.length === areas.length) {
                 areas.forEach((area, index) => { area.isOn = oldOnStates[index]; });
@@ -847,11 +695,9 @@
             currentStartMarks = selectedPreset.startMarks;
             currentEndMarks = selectedPreset.endMarks;
             currentStageIndex = presetIndex;
-            allHorizontalConnections = selectedPreset.horizontalConnections.map(presetConn => {
-                const newConn = { ...presetConn.line, patterns: JSON.parse(JSON.stringify(presetConn.patterns)) };
-                newConn.currentActivePattern = 'p1';
-                return newConn;
-            });
+            allHorizontalConnections = selectedPreset.horizontalConnections.map(presetConn => ({
+                ...presetConn.line, patterns: JSON.parse(JSON.stringify(presetConn.patterns)), currentActivePattern: 'p1'
+            }));
             selectedPreset.areaOnStates.forEach((isOnState, index) => {
                 if (areas[index]) areas[index].isOn = isOnState;
             });
@@ -870,17 +716,11 @@
             }
             allHorizontalConnections.forEach(conn => {
                 const attribute = conn.patterns[conn.currentActivePattern];
-                if (attribute === 'l') {
-                    if (conn.fromLine < conn.toLine) {
-                        leftOnlyLines.push({ fromLine: conn.fromLine, fromPoint: conn.fromPoint, toLine: conn.toLine, toPoint: conn.toPoint });
-                    }
-                } else if (attribute === 'r') {
-                    if (conn.fromLine < conn.toLine) {
-                        rightOnlyLines.push({ fromLine: conn.fromLine, fromPoint: conn.fromPoint, toLine: conn.toLine, toPoint: conn.toPoint });
-                    }
-                }
-                ladderMap[conn.fromLine][conn.fromPoint] = { targetLine: conn.toLine, targetPoint: conn.toPoint, attribute: attribute };
-                ladderMap[conn.toLine][conn.toPoint] = { targetLine: conn.fromLine, targetPoint: conn.fromPoint, attribute: attribute };
+                if (attribute === 'l' && conn.fromLine < conn.toLine) leftOnlyLines.push(conn);
+                else if (attribute === 'r' && conn.fromLine < conn.toLine) rightOnlyLines.push(conn);
+                
+                ladderMap[conn.fromLine][conn.fromPoint] = { targetLine: conn.toLine, targetPoint: conn.toPoint, attribute };
+                ladderMap[conn.toLine][conn.toPoint] = { targetLine: conn.fromLine, targetPoint: conn.fromPoint, attribute };
             });
         }
 
@@ -894,16 +734,11 @@
                     const area = areas[areaIndex];
                     if (area && area.isOn) {
                         allHorizontalConnections.forEach(conn => {
-                            const x1 = verticalLineX[conn.fromLine];
-                            const y1 = pointY[conn.fromPoint];
-                            const x2 = verticalLineX[conn.toLine];
-                            const midX = (x1 + x2) / 2;
-                            const midY = y1;
-                            if (isPointInRect(midX, midY, area)) {
-                                if (conn.currentActivePattern !== targetPattern) {
-                                    originalPatternsBeforeHint.push({ connection: conn, originalPattern: conn.currentActivePattern });
-                                    conn.currentActivePattern = targetPattern;
-                                }
+                            const midX = (verticalLineX[conn.fromLine] + verticalLineX[conn.toLine]) / 2;
+                            const midY = pointY[conn.fromPoint];
+                            if (isPointInRect(midX, midY, area) && conn.currentActivePattern !== targetPattern) {
+                                originalPatternsBeforeHint.push({ connection: conn, originalPattern: conn.currentActivePattern });
+                                conn.currentActivePattern = targetPattern;
                             }
                         });
                     }
@@ -931,106 +766,87 @@
             ctx.lineWidth = 2;
             for (const fromLineIndex in ladderMap) {
                 for (const fromPointIndex in ladderMap[fromLineIndex]) {
-                    const connection = ladderMap[fromLineIndex][fromPointIndex];
-                    if (connection.attribute === 'n') continue;
-                    if (parseInt(fromLineIndex) < connection.targetLine) {
-                        const leftX = verticalLineX[fromLineIndex];
-                        const rightX = verticalLineX[connection.targetLine];
-                        const y = pointY[fromPointIndex];
-                        const fullWidth = rightX - leftX;
-                        const shortenBy = fullWidth * 0.20;
-                        let drawX1 = leftX, drawX2 = rightX;
-                        if (connection.attribute === 'l') {
-                            drawX1 = leftX + shortenBy;
-                        } else if (connection.attribute === 'r') {
-                            drawX2 = rightX - shortenBy;
-                        }
-                        ctx.strokeStyle = '#cbd5e0';
-                        ctx.beginPath();
-                        ctx.moveTo(drawX1, y);
-                        ctx.lineTo(drawX2, y);
-                        ctx.stroke();
-                    }
+                    const conn = ladderMap[fromLineIndex][fromPointIndex];
+                    if (conn.attribute === 'n' || parseInt(fromLineIndex) >= conn.targetLine) continue;
+                    
+                    const leftX = verticalLineX[fromLineIndex];
+                    const rightX = verticalLineX[conn.targetLine];
+                    const y = pointY[fromPointIndex];
+                    const shortenBy = (rightX - leftX) * 0.20;
+                    let drawX1 = leftX, drawX2 = rightX;
+                    if (conn.attribute === 'l') drawX1 = leftX + shortenBy;
+                    else if (conn.attribute === 'r') drawX2 = rightX - shortenBy;
+                    
+                    ctx.strokeStyle = '#cbd5e0';
+                    ctx.beginPath();
+                    ctx.moveTo(drawX1, y);
+                    ctx.lineTo(drawX2, y);
+                    ctx.stroke();
                 }
             }
+
             ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            marks.forEach(mark => {
-                ctx.fillText(mark.char, mark.x, mark.y);
-            });
-            areas.forEach((currentArea, areaIndex) => {
-                const isCurrentAreaHint = GAME_PRESETS[currentStageIndex].hints.some(hint => hint[0] === areaIndex);
-                if (isHintActive && isCurrentAreaHint) return;
-                if (!currentArea.isOn) return;
+            marks.forEach(mark => ctx.fillText(mark.char, mark.x, mark.y));
+            
+            areas.forEach((area, i) => {
+                const isHintArea = GAME_PRESETS[currentStageIndex].hints.some(h => h[0] === i);
+                if (!area.isOn || (isHintActive && isHintArea)) return;
                 ctx.beginPath();
-                ctx.rect(currentArea.x, currentArea.y, currentArea.width, currentArea.height);
-                if (currentArea.isSelected) {
-                    ctx.fillStyle = hexToRgba(currentArea.color, 0.2);
+                ctx.rect(area.x, area.y, area.width, area.height);
+                if (area.isSelected) {
+                    ctx.fillStyle = hexToRgba(area.color, 0.2);
                     ctx.fill();
-                    ctx.strokeStyle = currentArea.color;
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
+                    ctx.strokeStyle = area.color;
                 } else {
-                    ctx.strokeStyle = hexToRgba(currentArea.color, 0.5);
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
+                    ctx.strokeStyle = hexToRgba(area.color, 0.5);
                 }
+                ctx.lineWidth = 1;
+                ctx.stroke();
             });
+
             ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            currentStartMarks.forEach((markChar, index) => {
-                const x = verticalLineX[index];
+            currentStartMarks.forEach((char, i) => {
+                const x = verticalLineX[i];
                 const y = MARK_FONT_SIZE / 2;
-                ctx.fillText(markChar, x, y);
+                ctx.fillText(char, x, y);
                 ctx.fillStyle = '#e2e8f0';
                 ctx.font = `${MARK_FONT_SIZE * 0.6}px 'Inter', sans-serif`;
-                ctx.fillText(String.fromCharCode(65 + index), x, y - MARK_FONT_SIZE * 0.7);
+                ctx.fillText(String.fromCharCode(65 + i), x, y - MARK_FONT_SIZE * 0.7);
+                ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
             });
-            ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            currentEndMarks.forEach((markChar, index) => {
-                const x = verticalLineX[index];
-                const y = canvas.height - (MARK_FONT_SIZE / 2);
-                ctx.fillText(markChar, x, y);
-            });
+            currentEndMarks.forEach((char, i) => ctx.fillText(char, verticalLineX[i], canvas.height - (MARK_FONT_SIZE / 2)));
+
             const now = Date.now();
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            leftOnlyLines.forEach(line => {
-                const x1 = verticalLineX[line.toLine];
-                const y1 = pointY[line.fromPoint];
-                const x2 = verticalLineX[line.fromLine];
-                const distance = x1 - x2;
-                const duration = distance * 25;
-                const progress = (now % duration) / duration;
-                const maxStarSize = MARK_FONT_SIZE * 0.6;
-                const minStarSize = MARK_FONT_SIZE * 0.2;
-                const scaleFactor = Math.sin(progress * Math.PI);
-                const currentStarSize = minStarSize + (maxStarSize - minStarSize) * scaleFactor;
-                const starX = x1 - (distance * progress);
-                const starY = y1;
-                ctx.font = `${currentStarSize}px "Segoe UI Emoji"`;
-                ctx.fillText('✨', starX, starY);
-            });
-            rightOnlyLines.forEach(line => {
+
+            const drawPulsingStar = (line, isRightToLeft) => {
                 const x1 = verticalLineX[line.fromLine];
-                const y1 = pointY[line.fromPoint];
                 const x2 = verticalLineX[line.toLine];
-                const distance = x2 - x1;
+                const y = pointY[line.fromPoint];
+                const distance = Math.abs(x2 - x1);
                 const duration = distance * 25;
                 const progress = (now % duration) / duration;
-                const maxStarSize = MARK_FONT_SIZE * 0.6;
-                const minStarSize = MARK_FONT_SIZE * 0.2;
                 const scaleFactor = Math.sin(progress * Math.PI);
-                const currentStarSize = minStarSize + (maxStarSize - minStarSize) * scaleFactor;
-                const starX = x1 + (distance * progress);
-                const starY = y1;
+                const currentStarSize = MARK_FONT_SIZE * 0.2 + (MARK_FONT_SIZE * 0.4 * scaleFactor);
+                const starX = isRightToLeft ? x2 - distance * progress : x1 + distance * progress;
                 ctx.font = `${currentStarSize}px "Segoe UI Emoji"`;
-                ctx.fillText('✨', starX, starY);
+                ctx.fillText('✨', starX, y);
+            };
+            leftOnlyLines.forEach(line => drawPulsingStar(line, true));
+            rightOnlyLines.forEach(line => drawPulsingStar(line, false));
+
+            // ★★★ 追加・変更点 START ★★★
+            // パーティクルの描画
+            particles.forEach(p => {
+                ctx.globalAlpha = Math.max(0, p.lifespan / 40); // 寿命に応じて透明度を変化（フェードアウト）
+                ctx.font = `${p.size}px "Segoe UI Emoji"`;
+                ctx.fillText(p.char, p.x, p.y);
             });
+            ctx.globalAlpha = 1.0; // 他の描画に影響しないように透明度をリセット
+            // ★★★ 追加・変更点 END ★★★
         }
 
         function updateMarkPosition(mark) {
@@ -1040,21 +856,13 @@
                 if (mark.currentPointIndex + 1 < POINT_COUNT_PER_LINE && mark.y >= pointY[mark.currentPointIndex + 1]) {
                     mark.currentPointIndex++;
                     mark.y = pointY[mark.currentPointIndex];
-                    const connection = ladderMap[mark.currentLineIndex][mark.currentPointIndex];
-                    if (connection && connection.attribute !== 'n') {
-                        const attribute = connection.attribute;
-                        const isMovingRight = connection.targetLine > mark.currentLineIndex;
-                        let shouldChangePath = false;
-                        if (attribute === 'a') {
-                            shouldChangePath = true;
-                        } else if (attribute === 'l') {
-                            shouldChangePath = !isMovingRight;
-                        } else if (attribute === 'r') {
-                            shouldChangePath = isMovingRight;
-                        }
-                        if (shouldChangePath) {
+                    const conn = ladderMap[mark.currentLineIndex][mark.currentPointIndex];
+                    if (conn && conn.attribute !== 'n') {
+                        const isMovingRight = conn.targetLine > mark.currentLineIndex;
+                        const shouldChange = (conn.attribute === 'a') || (conn.attribute === 'l' && !isMovingRight) || (conn.attribute === 'r' && isMovingRight);
+                        if (shouldChange) {
                             mark.state = isMovingRight ? 'moving_horizontal_right' : 'moving_horizontal_left';
-                            mark.targetHorizontalLineIndex = connection.targetLine;
+                            mark.targetHorizontalLineIndex = conn.targetLine;
                         }
                     }
                 }
@@ -1064,21 +872,22 @@
                     mark.finalLineIndex = mark.currentLineIndex;
                     checkGameEnd();
                 }
-            } else if (mark.state === 'moving_horizontal_right') {
-                mark.x += MARK_SPEED;
+            } else if (mark.state.startsWith('moving_horizontal')) {
                 const targetX = verticalLineX[mark.targetHorizontalLineIndex];
-                if (mark.x >= targetX) {
-                    mark.x = targetX;
-                    mark.currentLineIndex = mark.targetHorizontalLineIndex;
-                    mark.state = 'moving_down';
-                }
-            } else if (mark.state === 'moving_horizontal_left') {
-                mark.x -= MARK_SPEED;
-                const targetX = verticalLineX[mark.targetHorizontalLineIndex];
-                if (mark.x <= targetX) {
-                    mark.x = targetX;
-                    mark.currentLineIndex = mark.targetHorizontalLineIndex;
-                    mark.state = 'moving_down';
+                if (mark.state === 'moving_horizontal_right') {
+                    mark.x += MARK_SPEED;
+                    if (mark.x >= targetX) {
+                        mark.x = targetX;
+                        mark.currentLineIndex = mark.targetHorizontalLineIndex;
+                        mark.state = 'moving_down';
+                    }
+                } else {
+                    mark.x -= MARK_SPEED;
+                    if (mark.x <= targetX) {
+                        mark.x = targetX;
+                        mark.currentLineIndex = mark.targetHorizontalLineIndex;
+                        mark.state = 'moving_down';
+                    }
                 }
             }
         }
@@ -1088,33 +897,59 @@
                 cancelAnimationFrame(animationFrameId);
                 return;
             }
-            drawGame();
+            
+            // マークの位置を更新
             marks.forEach(updateMarkPosition);
+            
+            // ★★★ 追加・変更点 START ★★★
+            // パーティクルの生成と更新
+            marks.forEach(mark => {
+                if (mark.state !== 'finished') {
+                    const particleCount = 2; // 1フレームあたりに生成するパーティクルの数
+                    for (let i = 0; i < particleCount; i++) {
+                        particles.push({
+                            x: mark.x,
+                            y: mark.y,
+                            vx: (Math.random() - 0.5) * 2.5, // X方向のランダムな速度
+                            vy: (Math.random() - 0.5) * 2.5, // Y方向のランダムな速度
+                            size: Math.random() * MARK_FONT_SIZE * 0.2 + 2, // ランダムなサイズ
+                            lifespan: 40, // 寿命（フレーム数）
+                            char: '✨'
+                        });
+                    }
+                }
+            });
+
+            // 既存のパーティクルを更新し、寿命が尽きたものを削除
+            // 配列を後ろから処理することで、ループ中の要素削除によるインデックス問題を回避
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.lifespan--;
+                if (p.lifespan <= 0) {
+                    particles.splice(i, 1); // 寿命が尽きたら配列から削除
+                }
+            }
+            // ★★★ 追加・変更点 END ★★★
+
+            // 全てを描画
+            drawGame();
+            
             animationFrameId = requestAnimationFrame(animate);
         }
 
         function checkGameEnd() {
             finishedMarksCount++;
-            if (finishedMarksCount === marks.length) {
-                let allMatch = true;
-                for (const mark of marks) {
-                    if (mark.char === '') continue;
-                    const actualEndMark = currentEndMarks[mark.finalLineIndex];
-                    if (mark.targetEndMark !== actualEndMark) {
-                        allMatch = false;
-                        break;
-                    }
-                }
-                if (allMatch) {
-                    gameResult = 'clear';
+            if (finishedMarksCount === marks.filter(m => m.char !== '').length) {
+                const isClear = marks.every(m => m.char === '' || m.targetEndMark === currentEndMarks[m.finalLineIndex]);
+                gameResult = isClear ? 'clear' : 'fail';
+                if (isClear) {
                     const clearStatus = getClearStatus();
                     clearStatus[currentStageIndex] = true;
                     saveClearStatus(clearStatus);
-                    showResultPanel('クリア！');
-                } else {
-                    gameResult = 'fail';
-                    showResultPanel('失敗！');
                 }
+                showResultPanel(isClear ? 'クリア！' : '失敗！');
                 isGameRunning = false;
                 goButton.textContent = 'Go!';
                 goButton.style.backgroundColor = '#48bb78';
@@ -1123,17 +958,9 @@
             }
         }
 
-        // ★ 変更: 「次へ」ボタンの表示ロジックを追加
         function showResultPanel(message) {
             resultText.textContent = message;
-
-            // クリア状況に応じて「次へ」ボタンの表示を切り替える
-            if (gameResult === 'clear' && currentStageIndex < GAME_PRESETS.length - 1) {
-                nextStageButton.style.display = 'inline-block';
-            } else {
-                nextStageButton.style.display = 'none';
-            }
-
+            nextStageButton.style.display = (gameResult === 'clear' && currentStageIndex < GAME_PRESETS.length - 1) ? 'inline-block' : 'none';
             resultModal.classList.add('show');
         }
 
@@ -1144,7 +971,6 @@
         function resetGame() {
             cancelAnimationFrame(animationFrameId);
             isGameRunning = false;
-            finishedMarksCount = 0;
             gameResult = null;
             hideResultPanel(); 
             hideStageSelectionPanel();
@@ -1165,11 +991,12 @@
             isHintActive = false;
             hintButton.classList.remove('active');
             originalPatternsBeforeHint = [];
+            particles = []; // ★★★ 追加・変更点 ★★★ リセット時にパーティクルをクリア
             marks = currentStartMarks.map((char, index) => ({
-                id: String.fromCharCode(65 + index), char: char, x: verticalLineX[index], y: MARK_FONT_SIZE / 2,
+                id: String.fromCharCode(65 + index), char, x: verticalLineX[index], y: MARK_FONT_SIZE / 2,
                 originalX: verticalLineX[index], originalY: MARK_FONT_SIZE / 2,
                 currentLineIndex: index, currentPointIndex: -1, state: 'idle',
-                targetEndMark: MARK_TARGET_MAP[char], finalLineIndex: -1, reachedEnd: false
+                targetEndMark: MARK_TARGET_MAP[char], finalLineIndex: -1
             }));
             drawGame();
             startStarAnimation();
@@ -1179,32 +1006,25 @@
             softResetGame(); 
             stageButtonsContainer.innerHTML = ''; 
             const clearStatus = getClearStatus();
-            const currentStageSelectModalContent = document.querySelector('#stageSelectModal .modal-content');
-            const currentStageSelectModalHeight = currentStageSelectModalContent ? parseFloat(currentStageSelectModalContent.style.maxHeight) : 270; 
-            const stageButtonSize = currentStageSelectModalHeight / 5; 
-            GAME_PRESETS.forEach((preset, index) => {
+            const stageSelectModalContent = document.querySelector('#stageSelectModal .modal-content');
+            const modalHeight = stageSelectModalContent ? parseFloat(stageSelectModalContent.style.maxHeight) : 270; 
+            const buttonSize = modalHeight / 5; 
+            GAME_PRESETS.forEach((_, index) => {
                 const button = document.createElement('button');
                 button.textContent = `Stage ${index + 1}`;
-                button.classList.add('stage-button');
-                button.style.width = `${stageButtonSize}px`; 
-                button.style.height = `${stageButtonSize}px`;
-                if (clearStatus[index]) {
-                    button.classList.add('cleared');
-                }
-                if (index === currentStageIndex) {
-                    button.classList.add('current-stage');
-                }
-                button.addEventListener('click', () => handleStageButtonClick(index));
+                button.className = 'stage-button';
+                button.style.width = `${buttonSize}px`; 
+                button.style.height = `${buttonSize}px`;
+                if (clearStatus[index]) button.classList.add('cleared');
+                if (index === currentStageIndex) button.classList.add('current-stage');
+                button.onclick = () => handleStageButtonClick(index);
                 stageButtonsContainer.appendChild(button);
             });
             stageSelectModal.classList.add('show');
-            const currentStageButtonElement = stageButtonsContainer.querySelector('.current-stage');
-            if (currentStageButtonElement) {
+            const currentStageBtn = stageButtonsContainer.querySelector('.current-stage');
+            if (currentStageBtn) {
                 requestAnimationFrame(() => {
-                    const containerHeight = stageButtonsFrame.clientHeight;
-                    const buttonOffsetTop = currentStageButtonElement.offsetTop;
-                    const buttonHeight = currentStageButtonElement.offsetHeight;
-                    stageButtonsFrame.scrollTop = buttonOffsetTop - (containerHeight / 2) + (buttonHeight / 2);
+                    stageButtonsFrame.scrollTop = currentStageBtn.offsetTop - (stageButtonsFrame.clientHeight / 2) + (currentStageBtn.offsetHeight / 2);
                 });
             }
         }
@@ -1221,18 +1041,13 @@
 
         function startStarAnimation() {
             stopStarAnimation();
-            starAnimationInterval = setInterval(() => {
-                if (!isGameRunning) drawGame();
-            }, 1000 / 30);
+            starAnimationInterval = setInterval(() => { if (!isGameRunning) drawGame(); }, 1000 / 30);
         }
 
         function stopStarAnimation() {
-            if (starAnimationInterval) {
-                clearInterval(starAnimationInterval);
-                starAnimationInterval = null;
-            }
+            if (starAnimationInterval) clearInterval(starAnimationInterval);
+            starAnimationInterval = null;
         }
-
 
         // Event listeners
         goButton.addEventListener('click', () => {
@@ -1241,7 +1056,7 @@
             } else {
                 stopStarAnimation();
                 isGameRunning = true;
-                marks.forEach(mark => mark.state = 'moving_down');
+                marks.forEach(mark => { if (mark.char !== '') mark.state = 'moving_down'; });
                 goButton.textContent = 'Stop';
                 goButton.style.backgroundColor = '#dd6b20'; 
                 animate();
@@ -1251,7 +1066,6 @@
         resetButton.addEventListener('click', resetGame);
         modalResetButton.addEventListener('click', softResetGame);
         
-        // ★ 追加: 「次へ」ボタンのイベントリスナー
         nextStageButton.addEventListener('click', () => {
             if (currentStageIndex < GAME_PRESETS.length - 1) {
                 handleStageButtonClick(currentStageIndex + 1);
@@ -1260,17 +1074,28 @@
 
         stageButton.addEventListener('click', showStageSelectionPanel);
         hintButton.addEventListener('click', toggleHint);
-        stageSelectModal.addEventListener('click', (event) => {
-            if (event.target === stageSelectModal) {
-                hideStageSelectionPanel();
-            }
-        });
+        stageSelectModal.addEventListener('click', e => { if (e.target === stageSelectModal) hideStageSelectionPanel(); });
+        
         window.addEventListener('resize', resizeCanvas);
-        window.onload = function () {
+        window.onload = () => {
             resizeCanvas();
-            resetGame();
+            initializeGameData(0);
+            softResetGame();
             canvas.addEventListener('click', handleCanvasClick);
-            canvas.addEventListener('touchstart', handleCanvasClick);
+            canvas.addEventListener('touchstart', handleCanvasClick, { passive: true });
+
+            window.addEventListener('click', function(e) {
+                if (!canvas.contains(e.target)) {
+                    const needsRedraw = areas.some(a => a.isSelected);
+                    if (needsRedraw) {
+                        areas.forEach(a => {
+                            a.isSelected = false;
+                            a.associatedLines = [];
+                        });
+                        drawGame();
+                    }
+                }
+            });
         };
     </script>
 </body>
