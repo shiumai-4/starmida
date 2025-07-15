@@ -285,6 +285,8 @@
         const TARGET_ANIMATION_SECONDS = 2; // マークがゴールするまでの目標時間（秒）を2秒に設定
         const CLEAR_STATUS_STORAGE_KEY = 'amidakujiClearStatus'; // ローカルストレージのキー
         
+        const PARTICLE_COLORS = ['#4299e1', '#63b3ed', '#90cdf4', '#a0aec0'];
+
         let MARK_SPEED = 5; // letに変更し、動的に計算されるようにする
         let MARK_FONT_SIZE = 30; // Mark font size (動的に計算される)
         let LINE_START_Y = 50; // LINE_START_Yをletに変更し、初期値を設定
@@ -463,7 +465,8 @@
         let leftOnlyLines = [];
         let rightOnlyLines = [];
         let starAnimationInterval = null;
-        let particles = []; // ★★★ 追加・変更点 ★★★ パーティクルを管理する配列
+        let particles = []; 
+        let isFinishingAnimation = false;
 
         function getClearStatus() {
             const status = localStorage.getItem(CLEAR_STATUS_STORAGE_KEY);
@@ -681,8 +684,8 @@
             if (!isGameRunning) {
                 marks.forEach((mark, index) => {
                     if(verticalLineX[index]) {
-                        mark.x = verticalLineX[index]; mark.y = MARK_FONT_SIZE / 2;
-                        mark.originalX = verticalLineX[index]; mark.originalY = MARK_FONT_SIZE / 2;
+                        mark.x = verticalLineX[index]; mark.y = LINE_START_Y * 0.65;
+                        mark.originalX = verticalLineX[index]; mark.originalY = LINE_START_Y * 0.65;
                     }
                 });
                 areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
@@ -785,11 +788,19 @@
                 }
             }
 
-            ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            marks.forEach(mark => ctx.fillText(mark.char, mark.x, mark.y));
+            // パーティクルを描画
+            particles.forEach(p => {
+                // ★★★ 変更点 START ★★★
+                ctx.globalAlpha = Math.max(0, p.lifespan / p.initialLifespan);
+                // ★★★ 変更点 END ★★★
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0; 
             
+            // エリアを描画
             areas.forEach((area, i) => {
                 const isHintArea = GAME_PRESETS[currentStageIndex].hints.some(h => h[0] === i);
                 if (!area.isOn || (isHintActive && isHintArea)) return;
@@ -806,18 +817,25 @@
                 ctx.stroke();
             });
 
+            // 静的な開始マークとラベルを描画
             ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             currentStartMarks.forEach((char, i) => {
                 const x = verticalLineX[i];
-                const y = MARK_FONT_SIZE / 2;
-                ctx.fillText(char, x, y);
+                const markY = LINE_START_Y * 0.65;
+                const labelY = LINE_START_Y * 0.25;
+                ctx.fillText(char, x, markY);
                 ctx.fillStyle = '#e2e8f0';
                 ctx.font = `${MARK_FONT_SIZE * 0.6}px 'Inter', sans-serif`;
-                ctx.fillText(String.fromCharCode(65 + i), x, y - MARK_FONT_SIZE * 0.7);
+                ctx.fillText(String.fromCharCode(65 + i), x, labelY);
                 ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
             });
+
+            // ゴールのマークを描画
             currentEndMarks.forEach((char, i) => ctx.fillText(char, verticalLineX[i], canvas.height - (MARK_FONT_SIZE / 2)));
 
+            // 横線のキラキラエフェクトを描画
             const now = Date.now();
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -838,16 +856,38 @@
             leftOnlyLines.forEach(line => drawPulsingStar(line, true));
             rightOnlyLines.forEach(line => drawPulsingStar(line, false));
 
-            // ★★★ 追加・変更点 START ★★★
-            // パーティクルの描画
-            particles.forEach(p => {
-                ctx.globalAlpha = Math.max(0, p.lifespan / 40); // 寿命に応じて透明度を変化（フェードアウト）
-                ctx.font = `${p.size}px "Segoe UI Emoji"`;
-                ctx.fillText(p.char, p.x, p.y);
-            });
-            ctx.globalAlpha = 1.0; // 他の描画に影響しないように透明度をリセット
-            // ★★★ 追加・変更点 END ★★★
+            // 動くマークを最後に描画する（常に最前面に表示するため）
+            ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            marks.forEach(mark => ctx.fillText(mark.char, mark.x, mark.y));
         }
+
+        // ★★★ 変更点 START ★★★
+        function createSuccessBurst(x, y) {
+            const particleCount = 5;
+            const baseAngle = -Math.PI / 2;
+            const spread = Math.PI * 0.8;
+            const startAngle = baseAngle - spread / 2;
+            const angleIncrement = spread / (particleCount - 1);
+            const speed = 3;
+            const initialLifespan = 42; // 約0.7秒
+
+            for (let i = 0; i < particleCount; i++) {
+                const angle = startAngle + i * angleIncrement;
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: Math.random() * 2 + 3,
+                    lifespan: initialLifespan,
+                    initialLifespan: initialLifespan, // 初期寿命を保存
+                    color: '#63b3ed'
+                });
+            }
+        }
+        // ★★★ 変更点 END ★★★
 
         function updateMarkPosition(mark) {
             if (mark.state === 'finished') return;
@@ -866,10 +906,15 @@
                         }
                     }
                 }
-                if (mark.y >= canvas.height - MARK_FONT_SIZE) {
-                    mark.y = canvas.height - MARK_FONT_SIZE;
+                if (mark.y >= canvas.height - (MARK_FONT_SIZE / 2)) {
+                    mark.y = canvas.height - (MARK_FONT_SIZE / 2);
                     mark.state = 'finished';
                     mark.finalLineIndex = mark.currentLineIndex;
+
+                    if (mark.char !== '' && mark.targetEndMark === currentEndMarks[mark.finalLineIndex]) {
+                        createSuccessBurst(mark.x, mark.y);
+                    }
+
                     checkGameEnd();
                 }
             } else if (mark.state.startsWith('moving_horizontal')) {
@@ -898,42 +943,41 @@
                 return;
             }
             
-            // マークの位置を更新
             marks.forEach(updateMarkPosition);
             
-            // ★★★ 追加・変更点 START ★★★
-            // パーティクルの生成と更新
-            marks.forEach(mark => {
-                if (mark.state !== 'finished') {
-                    const particleCount = 2; // 1フレームあたりに生成するパーティクルの数
-                    for (let i = 0; i < particleCount; i++) {
-                        particles.push({
-                            x: mark.x,
-                            y: mark.y,
-                            vx: (Math.random() - 0.5) * 2.5, // X方向のランダムな速度
-                            vy: (Math.random() - 0.5) * 2.5, // Y方向のランダムな速度
-                            size: Math.random() * MARK_FONT_SIZE * 0.2 + 2, // ランダムなサイズ
-                            lifespan: 40, // 寿命（フレーム数）
-                            char: '✨'
-                        });
+            if (!isFinishingAnimation) {
+                marks.forEach(mark => {
+                    if (mark.state !== 'finished' && mark.char !== '') {
+                        const particleCount = 1;
+                        for (let i = 0; i < particleCount; i++) {
+                            // ★★★ 変更点 START ★★★
+                            const initialLifespan = 40;
+                            particles.push({
+                                x: mark.x,
+                                y: mark.y,
+                                vx: (Math.random() - 0.5) * 1.2,
+                                vy: (Math.random() - 0.5) * 1.2,
+                                size: Math.random() * 4 + 1,
+                                lifespan: initialLifespan,
+                                initialLifespan: initialLifespan, // 初期寿命を保存
+                                color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)]
+                            });
+                            // ★★★ 変更点 END ★★★
+                        }
                     }
-                }
-            });
+                });
+            }
 
-            // 既存のパーティクルを更新し、寿命が尽きたものを削除
-            // 配列を後ろから処理することで、ループ中の要素削除によるインデックス問題を回避
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
                 p.x += p.vx;
                 p.y += p.vy;
                 p.lifespan--;
                 if (p.lifespan <= 0) {
-                    particles.splice(i, 1); // 寿命が尽きたら配列から削除
+                    particles.splice(i, 1);
                 }
             }
-            // ★★★ 追加・変更点 END ★★★
 
-            // 全てを描画
             drawGame();
             
             animationFrameId = requestAnimationFrame(animate);
@@ -942,19 +986,25 @@
         function checkGameEnd() {
             finishedMarksCount++;
             if (finishedMarksCount === marks.filter(m => m.char !== '').length) {
-                const isClear = marks.every(m => m.char === '' || m.targetEndMark === currentEndMarks[m.finalLineIndex]);
-                gameResult = isClear ? 'clear' : 'fail';
-                if (isClear) {
-                    const clearStatus = getClearStatus();
-                    clearStatus[currentStageIndex] = true;
-                    saveClearStatus(clearStatus);
-                }
-                showResultPanel(isClear ? 'クリア！' : '失敗！');
-                isGameRunning = false;
-                goButton.textContent = 'Go!';
-                goButton.style.backgroundColor = '#48bb78';
-                goButton.disabled = true;
-                startStarAnimation();
+                isFinishingAnimation = true;
+                
+                setTimeout(() => {
+                    isGameRunning = false;
+
+                    const isClear = marks.every(m => m.char === '' || m.targetEndMark === currentEndMarks[m.finalLineIndex]);
+                    gameResult = isClear ? 'clear' : 'fail';
+                    if (isClear) {
+                        const clearStatus = getClearStatus();
+                        clearStatus[currentStageIndex] = true;
+                        saveClearStatus(clearStatus);
+                    }
+                    showResultPanel(isClear ? 'クリア！' : '失敗！');
+                    
+                    goButton.textContent = 'Go!';
+                    goButton.style.backgroundColor = '#48bb78';
+                    goButton.disabled = true;
+                    startStarAnimation();
+                }, 1000);
             }
         }
 
@@ -981,6 +1031,7 @@
         function softResetGame() {
             cancelAnimationFrame(animationFrameId);
             isGameRunning = false;
+            isFinishingAnimation = false;
             finishedMarksCount = 0;
             gameResult = null;
             goButton.disabled = false;
@@ -991,12 +1042,19 @@
             isHintActive = false;
             hintButton.classList.remove('active');
             originalPatternsBeforeHint = [];
-            particles = []; // ★★★ 追加・変更点 ★★★ リセット時にパーティクルをクリア
+            particles = []; 
             marks = currentStartMarks.map((char, index) => ({
-                id: String.fromCharCode(65 + index), char, x: verticalLineX[index], y: MARK_FONT_SIZE / 2,
-                originalX: verticalLineX[index], originalY: MARK_FONT_SIZE / 2,
-                currentLineIndex: index, currentPointIndex: -1, state: 'idle',
-                targetEndMark: MARK_TARGET_MAP[char], finalLineIndex: -1
+                id: String.fromCharCode(65 + index), 
+                char, 
+                x: verticalLineX[index], 
+                y: LINE_START_Y * 0.65,
+                originalX: verticalLineX[index], 
+                originalY: LINE_START_Y * 0.65,
+                currentLineIndex: index, 
+                currentPointIndex: -1, 
+                state: 'idle',
+                targetEndMark: MARK_TARGET_MAP[char], 
+                finalLineIndex: -1
             }));
             drawGame();
             startStarAnimation();
