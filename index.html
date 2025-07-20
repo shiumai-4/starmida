@@ -26,18 +26,39 @@
         }
         /* ゲーム全体を囲むコンテナのスタイル */
         #gameWrapper {
+            position: relative; /* ★ 変更: 子要素の絶対配置の基準にする */
+            overflow: hidden;   /* ★ 追加: はみ出たビデオを角丸に沿って隠す */
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between; /* タイトル、キャンバス、ボタン間にスペースを配分 */
-            padding: 1rem; /* ラッパーの内側にパディングを追加 */
+            justify-content: space-between;
+            padding: 1rem;
             border-radius: 1rem;
-            background-color: #2d3748; /* キャンバスの背景色に合わせるか、少し異なる色 */
+            background-color: #2d3748;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
-            box-sizing: border-box; /* パディングを幅/高さに含める */
-            margin: 2rem 0; /* 上下にマージンを追加してスクロール時に見やすくする */
-            min-width: 720px; /* 横幅の最小値を720pxに設定 */
-            /* 幅と高さはJavaScriptで設定されます */
+            box-sizing: border-box;
+            margin: 2rem 0;
+            min-width: 720px;
+        }
+        /* 背景動画のスタイル */
+        #background-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* ビデオを中央に配置 */
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: cover; /* アスペクト比を維持しつつ全体をカバー */
+            z-index: 1;        /* 他の要素より背面に配置 */
+            opacity: 0.4;      /* 動画の透明度を40%に設定 */
+        }
+
+        /* gameWrapper内の他の要素をビデオより前面に配置 */
+        #gameWrapper > *:not(#background-video) {
+            position: relative;
+            z-index: 2;
         }
 
         /* キャンバスとサイドボタン群を横並びにするコンテナ */
@@ -66,6 +87,18 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 影を追加 */
             flex-shrink: 0; /* コンテンツが大きすぎてもキャンバスが縮まないようにする */
             /* 幅と高さはJavaScriptで設定されます */
+        }
+        /* ★ 追加: パーティクル用キャンバスのスタイル */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1001; /* モーダル(1000)より手前に表示 */
+            pointer-events: none; /* クリックイベントを透過させる */
+            display: none; /* 初期状態では非表示 */
+            background-color: transparent;
         }
         /* ボタンコンテナのスタイル */
         .button-container {
@@ -242,10 +275,45 @@
         .stage-button.current-stage {
             border-color: #f87171;
         }
+
+        /* Footer specific styles - カスタムした文字色、フォントサイズ、マージン */
+        .main-footer {
+            width: 100%;
+            max-width: 600px; /* Match form container width */
+            text-align: center;
+            color: #374151; /* 例：文字色をより濃く */
+            margin-top: 32px; /* 例：フォームとの上マージンを調整 */
+        }
+        .main-footer a {
+            color: #d8971d; /* 例：リンクの色 */
+            text-decoration: none;
+            transition: color 0.2s ease-in-out;
+            font-size: 0.9rem; /* 例：リンクのフォントサイズを調整 */
+        }
+        .main-footer a:hover {
+            color: #8a580c; /* 例：ホバー時 */
+            text-decoration: underline;
+        }
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            justify-content: center;
+            gap: 1.25rem; /* 例：リンク間の間隔を広げる */
+            margin-bottom: 0.2rem; /* 例：リンク行と著作権表示間のマージンを調整 */
+        }
+        .footer-copyright {
+            font-size: 0.8rem; /* 例：著作権表示のフォントサイズを小さく */
+            color: #6b7280; /* グレーテキストは維持 */
+        }
     </style>
 </head>
 <body>
     <div id="gameWrapper">
+        <video autoplay muted loop id="background-video">
+            <source src="vidu-video-2869435395066147.mp4" type="video/mp4">
+            お使いのブラウザは動画タグをサポートしていません。
+        </video>
+
         <h1 class="text-3xl font-bold mb-6">あみだくじゲーム</h1>
         
         <div id="canvasAndControlsContainer">
@@ -282,6 +350,19 @@
             </div>
         </div>
     </div>
+    <footer class="main-footer">
+        <div class="footer-links">
+            <a href="https://example.com/portfolio" target="_blank" rel="noopener noreferrer">作品集</a>
+            <a href="https://x.com/your_x_handle" target="_blank" rel="noopener noreferrer">X</a>
+            <a href="https://example.com/privacy-policy" target="_blank" rel="noopener noreferrer">プライバシーポリシー</a>
+            <a href="https://example.com/contact" target="_blank" rel="noopener noreferrer">お問い合わせ</a>
+        </div>
+        <div class="footer-copyright">
+            ©︎2025 shiumai_4. All rights reserved.
+        </div>
+    </footer>
+    
+    <canvas id="confettiCanvas"></canvas>
 
     <script>
         // Constants and global variables
@@ -318,10 +399,7 @@
         const H_LINE_C9_D9 = { fromLine: 2, fromPoint: P9, toLine: 3, toPoint: P9 };
 
         const MARK_TARGET_MAP = {
-            '⭐️': '🌟', '💔': '❤️', '☘️': '🌱', '💠': '💎', '🍎': '🍏', '🍌': '🍋', '🍇': '🫐', '🍊': '🍑',
-            '🐶': '🐕', '🐱': '🐈', '🐭': '🐁', '🐹': '🐹', '☀️': '🌞', '☁️': '⛅', '🌧️': '☔', '⚡': '🌩️',
-            '⚽': '🥅', '🏀': ' hoop', '🏈': ' touchdown', '⚾': ' home run', '💡': '✨', '🔑': '🗝️',
-            '🔗': '⛓️', '🔒': '🔓', '⬆️': '⏫', '⬇️': '⏬', '⬅️': '⏪', '➡️': '⏩'
+            '⭐️': '🌟', '💔': '❤️', '☘️': '🍀', '💠': '💎'
         };
 
         const AREA_COLORS = [
@@ -330,8 +408,9 @@
         ];
 
         const GAME_PRESETS = [
-            {
-                startMarks: ['⭐️', '', '', '💠'], endMarks: ['🌟', '❤️', '🌱', '💎'],
+            // ... (GAME_PRESETSの内容は変更なしのため省略)
+             {
+                startMarks: ['⭐️', '', '', '💠'], endMarks: ['🌟', '❤️', '🍀', '💎'],
                 horizontalConnections: [
                     { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A3_B3, patterns: { p1: 'n', p2: 'a' } },
                     { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'n' } },
@@ -346,7 +425,7 @@
                 hints: [[0, 'p2'], [5, 'p1']]
             },
             {
-                startMarks: ['🍎', '🍌', '🍇', '🍊'], endMarks: ['🍏', '🍋', '🫐', '🍑'],
+                startMarks: ['⭐️', '💔', '☘️', '💠'], endMarks: ['🌟', '❤️', '🍀', '💎'],
                 horizontalConnections: [
                     { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'n' } },
                     { line: H_LINE_A4_B4, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'a' } },
@@ -361,7 +440,7 @@
                 hints: [[1, 'p2'], [7, 'p1']]
             },
             {
-                startMarks: ['🐶', '🐱', '🐭', '🐹'], endMarks: ['🐕', '🐈', '🐁', '🐹'],
+                startMarks: ['⭐️', '💔', '☘️', '💠'], endMarks: ['🌟', '❤️', '🍀', '💎'],
                 horizontalConnections: [
                     { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A3_B3, patterns: { p1: 'n', p2: 'n' } },
                     { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A6_B6, patterns: { p1: 'n', p2: 'n' } },
@@ -376,7 +455,7 @@
                 hints: [[3, 'p2']]
             },
             {
-                startMarks: ['☀️', '☁️', '🌧️', '⚡'], endMarks: ['🌞', '⛅', '☔', '🌩️'],
+                startMarks: ['⭐️', '💔', '☘️', '💠'], endMarks: ['🌟', '❤️', '🍀', '💎'],
                 horizontalConnections: [
                     { line: H_LINE_A1_B1, patterns: { p1: 'l', p2: 'r' } }, { line: H_LINE_A3_B3, patterns: { p1: 'r', p2: 'l' } },
                     { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A6_B6, patterns: { p1: 'l', p2: 'a' } },
@@ -391,7 +470,7 @@
                 hints: []
             },
             {
-                startMarks: ['⚽', '🏀', '🏈', '⚾'], endMarks: ['🥅', ' hoop', ' touchdown', ' home run'],
+                startMarks: ['⭐️', '💔', '☘️', '💠'], endMarks: ['🌟', '❤️', '🍀', '💎'],
                 horizontalConnections: [
                     { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'a' } },
                     { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'a' } },
@@ -406,7 +485,7 @@
                 hints: []
             },
             {
-                startMarks: ['💡', '🔑', '🔗', '🔒'], endMarks: ['✨', '🗝️', '⛓️', '🔓'],
+                startMarks: ['⭐️', '💔', '☘️', '💠'], endMarks: ['🌟', '❤️', '🍀', '💎'],
                 horizontalConnections: [
                     { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } },
                     { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'n' } },
@@ -418,7 +497,7 @@
                 hints: []
             },
             {
-                startMarks: ['⬆️', '⬇️', '⬅️', '➡️'], endMarks: ['⏫', '⏬', '⏪', '⏩'],
+                startMarks: ['⭐️', '💔', '☘️', '💠'], endMarks: ['🌟', '❤️', '🍀', '💎'],
                 horizontalConnections: [
                     { line: H_LINE_A1_B1, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'n' } },
                     { line: H_LINE_A4_B4, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'n' } },
@@ -437,6 +516,9 @@
         // Get DOM elements
         const canvas = document.getElementById('amidakujiCanvas');
         const ctx = canvas.getContext('2d');
+        // ★ 追加: パーティクル用キャンバスの要素とコンテキスト
+        const confettiCanvas = document.getElementById('confettiCanvas');
+        const confettiCtx = confettiCanvas.getContext('2d');
         const goButton = document.getElementById('goButton');
         const resetButton = document.getElementById('resetButton');
         const stageButton = document.getElementById('stageButton');
@@ -470,7 +552,9 @@
         let leftOnlyLines = [];
         let rightOnlyLines = [];
         let starAnimationInterval = null;
-        let particles = []; 
+        let particles = [];
+        let clearParticles = [];
+        let clearAnimationId = null;
         let isFinishingAnimation = false;
 
         function getClearStatus() {
@@ -623,7 +707,7 @@
             gameWrapper.style.height = `${wrapperHeight}px`;
             const titleHeightEstimate = 54;
             const buttonHeightEstimate = (0.75 * 16 * 2) + (16 * 1) + (1.5 * 16);
-            const wrapperPadding = 2 * 16;
+            const wrapperPadding = 2 * 18;
             const canvasAvailableHeight = wrapperHeight - titleHeightEstimate - buttonHeightEstimate - wrapperPadding;
             
             const sideButtonsWidthEstimate = 140; 
@@ -641,6 +725,11 @@
             }
             canvas.width = currentCanvasWidth;
             canvas.height = currentCanvasHeight;
+
+            // ★ 変更: パーティクル用キャンバスのサイズも更新
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+
             MARK_SPEED = (canvas.height / TARGET_ANIMATION_SECONDS) / 60;
 
             const buttonSize = Math.min(currentCanvasHeight / 10, 50);
@@ -654,30 +743,22 @@
             resetButton.style.height = `${buttonSize}px`;
             goButton.style.height = `${buttonSize}px`;
 
-            //★ここから追加
             const sideButtons = [stageButton, resetButton, hintButton];
         
-            // 1. 全てのボタンの幅を一旦自動計算に戻し、自然な幅を取得する
-            //    ※ hintButtonのCSSにはpadding:0が設定されているため、一時的にpaddingを設定して他のボタンと条件を揃える
             hintButton.style.padding = '0.75rem 1.5rem';
             sideButtons.forEach(btn => btn.style.width = 'auto');
 
-            // 2. 3つのボタンの幅を取得し、最も大きい幅を計算する
-            //    ※ offsetWidthを使うことで、paddingを含めた実際の表示幅を取得できる
             const maxWidth = Math.max(
                 stageButton.offsetWidth,
                 resetButton.offsetWidth,
                 hintButton.offsetWidth
             );
 
-            // 3. 全てのボタンに最大の幅を設定する
             sideButtons.forEach(btn => {
                 btn.style.width = `${maxWidth}px`;
             });
             
-            // 4. 一時的に設定したhintButtonのpaddingを元に戻す
             hintButton.style.padding = '';
-            //★追加ここまで
 
             const currentFontSize = parseFloat(getComputedStyle(goButton).fontSize);
             const buttonPaddingY = (buttonSize - currentFontSize) / 2;
@@ -785,8 +866,8 @@
             initializeLadderMap();
             drawGame();
         }
-
-        function drawGame() {
+        
+        function drawGame(options = { drawMovingElements: true }) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = '#a0aec0';
             ctx.lineWidth = 2;
@@ -818,19 +899,17 @@
                 }
             }
 
-            // パーティクルを描画
-            particles.forEach(p => {
-                // ★★★ 変更点 START ★★★
-                ctx.globalAlpha = Math.max(0, p.lifespan / p.initialLifespan);
-                // ★★★ 変更点 END ★★★
-                ctx.beginPath();
-                ctx.rect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
-                ctx.fillStyle = p.color;
-                ctx.fill();
-            });
-            ctx.globalAlpha = 1.0; 
+            if (options.drawMovingElements) {
+                particles.forEach(p => {
+                    ctx.globalAlpha = Math.max(0, p.lifespan / p.initialLifespan);
+                    ctx.beginPath();
+                    ctx.rect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+                });
+                ctx.globalAlpha = 1.0; 
+            }
             
-            // エリアを描画
             areas.forEach((area, i) => {
                 const isHintArea = GAME_PRESETS[currentStageIndex].hints.some(h => h[0] === i);
                 if (!area.isOn || (isHintActive && isHintArea)) return;
@@ -847,7 +926,6 @@
                 ctx.stroke();
             });
 
-            // 静的な開始マークとラベルを描画
             ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -862,10 +940,8 @@
                 ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
             });
 
-            // ゴールのマークを描画
             currentEndMarks.forEach((char, i) => ctx.fillText(char, verticalLineX[i], canvas.height - (MARK_FONT_SIZE / 2)));
 
-            // 横線のキラキラエフェクトを描画
             const now = Date.now();
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -886,14 +962,14 @@
             leftOnlyLines.forEach(line => drawPulsingStar(line, true));
             rightOnlyLines.forEach(line => drawPulsingStar(line, false));
 
-            // 動くマークを最後に描画する（常に最前面に表示するため）
-            ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            marks.forEach(mark => ctx.fillText(mark.char, mark.x, mark.y));
+            if (options.drawMovingElements) {
+                ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                marks.forEach(mark => ctx.fillText(mark.char, mark.x, mark.y));
+            }
         }
 
-        // ★★★ 変更点 START ★★★
         function createSuccessBurst(x, y) {
             const particleCount = 5;
             const baseAngle = -Math.PI / 2;
@@ -901,7 +977,7 @@
             const startAngle = baseAngle - spread / 2;
             const angleIncrement = spread / (particleCount - 1);
             const speed = 3;
-            const initialLifespan = 42; // 約0.7秒
+            const initialLifespan = 42;
 
             for (let i = 0; i < particleCount; i++) {
                 const angle = startAngle + i * angleIncrement;
@@ -910,14 +986,13 @@
                     y: y,
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed,
-                    size: Math.random() * 2 + 3,
+                    size: Math.random() * 8 + 2,
                     lifespan: initialLifespan,
-                    initialLifespan: initialLifespan, // 初期寿命を保存
+                    initialLifespan: initialLifespan,
                     color: '#63b3ed'
                 });
             }
         }
-        // ★★★ 変更点 END ★★★
 
         function updateMarkPosition(mark) {
             if (mark.state === 'finished') return;
@@ -980,7 +1055,6 @@
                     if (mark.state !== 'finished' && mark.char !== '') {
                         const particleCount = 1;
                         for (let i = 0; i < particleCount; i++) {
-                            // ★★★ 変更点 START ★★★
                             const initialLifespan = 40;
                             particles.push({
                                 x: mark.x,
@@ -989,10 +1063,9 @@
                                 vy: (Math.random() - 0.5) * 1.2,
                                 size: Math.random() * 4 + 1,
                                 lifespan: initialLifespan,
-                                initialLifespan: initialLifespan, // 初期寿命を保存
+                                initialLifespan: initialLifespan,
                                 color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)]
                             });
-                            // ★★★ 変更点 END ★★★
                         }
                     }
                 });
@@ -1028,19 +1101,14 @@
                         clearStatus[currentStageIndex] = true;
                         saveClearStatus(clearStatus);
                     
-                        // 現在のステージが最終ステージかどうかを判定
                         const isFinalStage = currentStageIndex === GAME_PRESETS.length - 1;
-                        console.log(isFinalStage);
                         if (isFinalStage) {
-                            // 最終ステージクリア時の処理
                             showResultPanel('おめでとう！最後のステージをクリアした！', true);
                         } else {
-                            // 通常のステージクリア時の処理
                             showResultPanel('クリア！', false);
                         }
 
                     } else {
-                        // 失敗時の処理
                         showResultPanel('失敗！', false);
                     }
 
@@ -1051,24 +1119,108 @@
                 }, 1000);
             }
         }
+        
+        // ★ 変更: パーティクル生成ロジックを修正
+        function createClearConfetti() {
+            clearParticles = []; 
+            const particleCount = 100;
+            const durationInFrames = 1.1 * 60;
+            const colors = AREA_COLORS;
+            
+            // ★ 変更: ゲームキャンバスのスクリーン上の位置を取得
+            const rect = canvas.getBoundingClientRect();
 
+            for (let i = 0; i < particleCount; i++) {
+                const fromLeft = Math.random() < 0.5;
+                // ★ 変更: パーティクルの発生源をゲームキャンバスの左下・右下に合わせる
+                const x = fromLeft ? rect.left : rect.right;
+                const y = rect.bottom;
+
+                const angle = fromLeft ? Math.random() * -Math.PI / 2 : Math.random() * -Math.PI / 2 - Math.PI / 2;
+                const speed = Math.random() * 9 + 3;
+
+                clearParticles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: Math.random() * 22 + 6,
+                    lifespan: durationInFrames,
+                    initialLifespan: durationInFrames,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    skewX: (Math.random() - 0.5) * 0.9
+                });
+            }
+        }
+        
+        // ★ 変更: パーティクルアニメーションのロジックを修正
+        function animateClearParticles() {
+            if (clearAnimationId) {
+                cancelAnimationFrame(clearAnimationId);
+            }
+
+            function loop() {
+                // ★ 変更: 専用のキャンバスをクリア
+                confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+                for (let i = clearParticles.length - 1; i >= 0; i--) {
+                    const p = clearParticles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.lifespan--;
+
+                    if (p.lifespan <= 0) {
+                        clearParticles.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // ★ 変更: 描画コンテキストを confettiCtx に変更
+                    confettiCtx.save();
+                    confettiCtx.globalAlpha = Math.max(0, p.lifespan / p.initialLifespan);
+                    confettiCtx.fillStyle = p.color;
+                    
+                    confettiCtx.translate(p.x, p.y);
+                    confettiCtx.transform(1, 0, p.skewX, 1, 0, 0);
+                    confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    
+                    confettiCtx.restore();
+                }
+                
+                if (clearParticles.length > 0) {
+                    clearAnimationId = requestAnimationFrame(loop);
+                } else {
+                    // ★ 変更: アニメーション終了時に専用キャンバスを非表示にする
+                    confettiCanvas.style.display = 'none';
+                    clearAnimationId = null;
+                }
+            }
+            
+            clearAnimationId = requestAnimationFrame(loop);
+        }
+        
+        // ★ 変更: `showResultPanel`のロジックを修正
         function showResultPanel(message, isFinalClear = false) {
             resultText.textContent = message;
 
-            // スタイルを一度リセットする（他のステージでスタイルが残らないようにするため）
             resultText.style.color = '';
             resultText.style.fontWeight = '';
             resultText.style.fontSize = '';
             
             if (isFinalClear) {
-                // 最終ステージクリアの場合、特別なスタイルを適用
-                resultText.style.color = '#ecc94b'; // 黄色
-                resultText.style.fontWeight = 'bold';   // 太字
-                resultText.style.fontSize = '1.5em';    // 文字を少し大きくする
+                resultText.style.color = '#ecc94b';
+                resultText.style.fontWeight = 'bold';
+                resultText.style.fontSize = '1.5em';
             }
 
             nextStageButton.style.display = (gameResult === 'clear' && currentStageIndex < GAME_PRESETS.length - 1) ? 'inline-block' : 'none';
             resultModal.classList.add('show');
+
+            if (gameResult === 'clear') {
+                // ★ 変更: 専用キャンバスを表示してからアニメーションを開始
+                confettiCanvas.style.display = 'block';
+                createClearConfetti();
+                animateClearParticles();
+            }
         }
 
         function hideResultPanel() {
@@ -1084,9 +1236,15 @@
             initializeGameData(currentStageIndex); 
             softResetGame();
         }
-
+        
+        // ★ 変更: `softResetGame`にクリア演出の停止処理を追加
         function softResetGame() {
             cancelAnimationFrame(animationFrameId);
+            
+            // クリア演出が動いていれば停止・非表示にする
+            if(clearAnimationId) cancelAnimationFrame(clearAnimationId);
+            if(confettiCanvas) confettiCanvas.style.display = 'none';
+
             isGameRunning = false;
             isFinishingAnimation = false;
             finishedMarksCount = 0;
