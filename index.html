@@ -5,29 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>あみだくじ</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         /* グローバルなスタイルとダークモードのテーマ設定 */
         body {
-            font-family: 'Inter', sans-serif; /* フォントをInterに設定 */
-            background-color: #1a202c; /* ダークな背景色 */
-            color: #e2e8f0; /* 明るいテキスト色 */
-            display: flex; /* gameWrapperを中央に配置するためにbodyをflexコンテナに */
-            flex-direction: column; /* 垂直方向に配置 */
-            align-items: center; /* gameWrapperを水平方向に中央寄せ */
-            justify-content: center; /* gameWrapperを垂直方向に中央寄せ */
-            min-height: 100vh; /* 画面いっぱいの高さ */
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
             margin: 0;
-            overflow: auto; /* コンテンツがはみ出た場合にスクロールバーを表示 */
+            overflow: auto;
         }
         @media (max-width: 720px) {
             body {
-                align-items: flex-start; /* 左揃えに上書き */
+                align-items: flex-start;
             }
         }
         /* ゲーム全体を囲むコンテナのスタイル */
         #gameWrapper {
-            position: relative; /* ★ 変更: 子要素の絶対配置の基準にする */
-            overflow: hidden;   /* ★ 追加: はみ出たビデオを角丸に沿って隠す */
+            position: relative; 
+            overflow: hidden;   
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -45,14 +46,14 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%); /* ビデオを中央に配置 */
+            transform: translate(-50%, -50%);
             min-width: 100%;
             min-height: 100%;
             width: auto;
             height: auto;
-            object-fit: cover; /* アスペクト比を維持しつつ全体をカバー */
-            z-index: 1;        /* 他の要素より背面に配置 */
-            opacity: 0.4;      /* 動画の透明度を40%に設定 */
+            object-fit: cover;
+            z-index: 1;
+            opacity: 0.7;
         }
 
         /* gameWrapper内の他の要素をビデオより前面に配置 */
@@ -64,9 +65,9 @@
         /* キャンバスとサイドボタン群を横並びにするコンテナ */
         #canvasAndControlsContainer {
             display: flex;
-            align-items: center; /* 垂直方向の中央揃え */
-            gap: 1rem; /* キャンバスとボタンの間のスペース */
-            margin-bottom: 1.5rem; /* ボタンコンテナとの間にマージン */
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
             width: 100%;
             justify-content: center;
         }
@@ -74,80 +75,78 @@
         /* StageとHintボタンを縦に並べるコンテナ */
         #sideButtonsContainer {
             display: flex;
-            flex-direction: column; /* 縦に並べる */
-            justify-content: center; /* 垂直方向に中央寄せ */
-            align-items: center; /* 水平方向に中央揃え */
-            gap: 1.5rem; /* ボタン間のスペース */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
         }
 
         /* キャンバスのスタイル */
         canvas {
-            background-color: #2d3748; /* キャンバスの背景色（少し明るいダークトーン） */
-            border-radius: 1rem; /* 角を丸くする */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 影を追加 */
-            flex-shrink: 0; /* コンテンツが大きすぎてもキャンバスが縮まないようにする */
-            /* 幅と高さはJavaScriptで設定されます */
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
         }
-        /* ★ 追加: パーティクル用キャンバスのスタイル */
+        /* パーティクル用キャンバスのスタイル */
         #confettiCanvas {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 1001; /* モーダル(1000)より手前に表示 */
-            pointer-events: none; /* クリックイベントを透過させる */
-            display: none; /* 初期状態では非表示 */
+            z-index: 1001;
+            pointer-events: none;
+            display: none;
             background-color: transparent;
         }
         /* ボタンコンテナのスタイル */
         .button-container {
             display: flex;
-            gap: 1rem; /* ボタン間のスペース */
+            gap: 1rem;
         }
         /* ゲームボタンの共通スタイル */
         .game-button {
             padding: 0.75rem 1.5rem;
             border-radius: 0.75rem;
             font-weight: bold;
-            transition: all 0.2s ease-in-out; /* ホバーエフェクトのためのトランジション */
+            transition: all 0.2s ease-in-out;
             cursor: pointer;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             border: none;
             display: flex;
             justify-content: center;
             align-items: center;
-            white-space: nowrap; /* ボタンテキストが改行しないようにする */
+            white-space: nowrap;
         }
         .game-button:hover {
-            transform: translateY(-2px); /* ホバー時に少し上に移動 */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* ホバー時に影を濃くする */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
         /* Go! ボタンのスタイル */
         #goButton {
-            background-color: #48bb78; /* 緑色 */
+            background-color: #48bb78;
             color: white;
         }
         #goButton:disabled {
-            background-color: #2f855a; /* 無効時の色 */
-            cursor: not-allowed; /* 無効時のカーソル */
+            background-color: #2f855a;
+            cursor: not-allowed;
         }
         /* リセットボタンのスタイル */
         #resetButton {
-            background-color: #ecc94b; /* 黄色 */
-            color: #2d3748; /* ダークなテキスト色 */
+            background-color: #ecc94b;
+            color: #2d3748;
         }
         /* ステージボタンのスタイル */
         #stageButton {
-            background-color: #4299e1; /* 青色 */
+            background-color: #4299e1;
             color: white;
         }
 
         /* HINTボタンのスタイル */
         #hintButton {
-            background-color: #e53e3e; /* 赤色 */
+            background-color: #e53e3e;
             color: white;
-            padding: 0; /* JSでサイズ制御するためpaddingをリセット */
+            padding: 0;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease-in-out;
             cursor: pointer;
@@ -157,7 +156,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
         #hintButton.active {
-            background-color: #38a169; /* ON時の色 (緑色) */
+            background-color: #38a169;
         }
 
         /* モーダルオーバーレイのスタイル */
@@ -167,32 +166,32 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7); /* 暗いオーバーレイ */
+            background-color: rgba(0, 0, 0, 0.7);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000; /* 最前面に表示 */
-            opacity: 0; /* 初期状態では非表示 */
-            visibility: hidden; /* 初期状態では非表示 */
-            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; /* フェードイン/アウト */
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
         }
         .modal-overlay.show {
-            opacity: 1; /* 表示時に不透明 */
-            visibility: visible; /* 表示時に可視 */
+            opacity: 1;
+            visibility: visible;
         }
         /* モーダルコンテンツのスタイル */
         .modal-content {
-            background-color: #2d3748; /* ダークな背景色 */
+            background-color: #2d3748;
             color: #e2e8f0;
             padding: 2rem;
             border-radius: 1rem;
             text-align: center;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
-            transform: scale(0.9); /* 表示時に拡大アニメーション */
+            transform: scale(0.9);
             transition: transform 0.3s ease-in-out;
         }
         .modal-overlay.show .modal-content {
-            transform: scale(1); /* 表示時に元のサイズに */
+            transform: scale(1);
         }
         #resultModal .modal-button-container {
             display: flex;
@@ -212,11 +211,11 @@
             transform: translateY(-2px);
         }
         #modalResetButton {
-            background-color: #4299e1; /* 青色 */
+            background-color: #4299e1;
             color: white;
         }
         #nextStageButton {
-            background-color: #48bb78; /* 緑色 */
+            background-color: #48bb78;
             color: white;
         }
 
@@ -227,9 +226,6 @@
             gap: 0.5rem;
             padding: 1rem;
             box-sizing: border-box;
-        }
-        #stageSelectModal .modal-content h2 {
-            /* font-size and margin-bottom are set dynamically in JS */
         }
         #stageSelectModal #stageButtonsFrame {
             overflow-y: auto;
@@ -276,41 +272,41 @@
             border-color: #f87171;
         }
 
-        /* Footer specific styles - カスタムした文字色、フォントサイズ、マージン */
+        /* Footer specific styles */
         .main-footer {
             width: 100%;
-            max-width: 600px; /* Match form container width */
+            max-width: 600px;
             text-align: center;
-            color: #374151; /* 例：文字色をより濃く */
-            margin-top: 32px; /* 例：フォームとの上マージンを調整 */
+            color: #374151;
+            margin-top: 32px;
         }
         .main-footer a {
-            color: #d8971d; /* 例：リンクの色 */
+            color: #d8971d;
             text-decoration: none;
             transition: color 0.2s ease-in-out;
-            font-size: 0.9rem; /* 例：リンクのフォントサイズを調整 */
+            font-size: 0.9rem;
         }
         .main-footer a:hover {
-            color: #8a580c; /* 例：ホバー時 */
+            color: #8a580c;
             text-decoration: underline;
         }
         .footer-links {
             display: flex;
-            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            flex-wrap: wrap;
             justify-content: center;
-            gap: 1.25rem; /* 例：リンク間の間隔を広げる */
-            margin-bottom: 0.2rem; /* 例：リンク行と著作権表示間のマージンを調整 */
+            gap: 1.25rem;
+            margin-bottom: 0.2rem;
         }
         .footer-copyright {
-            font-size: 0.8rem; /* 例：著作権表示のフォントサイズを小さく */
-            color: #6b7280; /* グレーテキストは維持 */
+            font-size: 0.8rem;
+            color: #6b7280;
         }
     </style>
 </head>
 <body>
     <div id="gameWrapper">
         <video autoplay muted loop id="background-video">
-            <source src="vidu-video-2869435395066147.mp4" type="video/mp4">
+            <source src="starmida_bg.mp4" type="video/mp4">
             お使いのブラウザは動画タグをサポートしていません。
         </video>
 
@@ -345,8 +341,7 @@
         <div class="modal-content">
             <h2 id="stageSelectTitle" class="text-2xl mb-4">ステージ選択</h2>
             <div id="stageButtonsFrame">
-                <div id="stageButtonsContainer">
-                    </div>
+                <div id="stageButtonsContainer"></div>
             </div>
         </div>
     </div>
@@ -365,175 +360,79 @@
     <canvas id="confettiCanvas"></canvas>
 
     <script>
-        // Constants and global variables
-        const LINE_COUNT = 4; // Number of vertical lines (A, B, C, D)
-        const POINT_COUNT_PER_LINE = 9; // Number of points on each vertical line
-        const TARGET_ANIMATION_SECONDS = 2; // マークがゴールするまでの目標時間（秒）を2秒に設定
-        const CLEAR_STATUS_STORAGE_KEY = 'amidakujiClearStatus'; // ローカルストレージのキー
-        
+        // --- 定数定義 (Constants) ---
+        const LINE_COUNT = 4;
+        const POINT_COUNT_PER_LINE = 9;
+        const TARGET_ANIMATION_SECONDS = 2;
+        const CLEAR_STATUS_STORAGE_KEY = 'amidakujiClearStatus';
         const PARTICLE_COLORS = ['#4299e1', '#63b3ed', '#90cdf4', '#a0aec0'];
+        const GOAL_AREA_HEIGHT_RATIO = 0.18;
 
-        let MARK_SPEED = 5; // letに変更し、動的に計算されるようにする
-        let MARK_FONT_SIZE = 30; // Mark font size (動的に計算される)
-        let LINE_START_Y = 50; // LINE_START_Yをletに変更し、初期値を設定
-
-        // Define symbolic names for horizontal connection points (point indices)
-        const P1 = 0; const P2 = 1; const P3 = 2; const P4 = 3; const P5 = 4;
-        const P6 = 5; const P7 = 6; const P8 = 7; const P9 = 8;
-
-        // Define symbolic names and fixed connection points for each horizontal line.
-        const H_LINE_A1_B1 = { fromLine: 0, fromPoint: P1, toLine: 1, toPoint: P1 };
-        const H_LINE_A3_B3 = { fromLine: 0, fromPoint: P3, toLine: 1, toPoint: P3 };
-        const H_LINE_A4_B4 = { fromLine: 0, fromPoint: P4, toLine: 1, toPoint: P4 };
-        const H_LINE_A6_B6 = { fromLine: 0, fromPoint: P6, toLine: 1, toPoint: P6 };
-        const H_LINE_A7_B7 = { fromLine: 0, fromPoint: P7, toLine: 1, toPoint: P7 };
-        const H_LINE_A9_B9 = { fromLine: 0, fromPoint: P9, toLine: 1, toPoint: P9 };
-        const H_LINE_B2_C2 = { fromLine: 1, fromPoint: P2, toLine: 2, toPoint: P2 };
-        const H_LINE_B5_C5 = { fromLine: 1, fromPoint: P5, toLine: 2, toPoint: P5 };
-        const H_LINE_B8_C8 = { fromLine: 1, fromPoint: P8, toLine: 2, toPoint: P8 };
-        const H_LINE_C1_D1 = { fromLine: 2, fromPoint: P1, toLine: 3, toPoint: P1 };
-        const H_LINE_C3_D3 = { fromLine: 2, fromPoint: P3, toLine: 3, toPoint: P3 };
-        const H_LINE_C4_D4 = { fromLine: 2, fromPoint: P4, toLine: 3, toPoint: P4 };
-        const H_LINE_C6_D6 = { fromLine: 2, fromPoint: P6, toLine: 3, toPoint: P6 };
-        const H_LINE_C7_D7 = { fromLine: 2, fromPoint: P7, toLine: 3, toPoint: P7 };
-        const H_LINE_C9_D9 = { fromLine: 2, fromPoint: P9, toLine: 3, toPoint: P9 };
-
-        const MARK_TARGET_MAP = {
-            '⭐️': '🌟', '💔': '❤️', '☘️': '🍀', '💠': '💎'
+        // --- シンボル定義 (Symbolic Definitions) ---
+        const P = Array.from({ length: 9 }, (_, i) => i);
+        const H_LINE = (from, fromP, to, toP) => ({ fromLine: from, fromPoint: fromP, toLine: to, toPoint: toP });
+        
+        const MARKS = {
+            GOLD:  { id: 1, icon: '\uf005', color: '#ecc94b' },
+            RED:   { id: 2, icon: '\uf005', color: '#e53e3e' },
+            GREEN: { id: 3, icon: '\uf005', color: '#48bb78' },
+            BLUE:  { id: 4, icon: '\uf005', color: '#4299e1' }
         };
+        const EMPTY_MARK = null;
 
         const AREA_COLORS = [
             '#FF6347', '#4682B4', '#32CD32', '#FFD700', '#DA70D6', '#00CED1',
             '#FF4500', '#8A2BE2', '#ADFF2F', '#FFB6C1', '#87CEEB', '#98FB98'
         ];
-
+        
+        // --- ゲームデータ (Game Data) ---
         const GAME_PRESETS = [
-            // ... (GAME_PRESETSの内容は変更なしのため省略)
              {
-                startMarks: ['⭐️', '', '', '💠'], endMarks: ['🌟', '❤️', '🍀', '💎'],
+                startMarks: [MARKS.GOLD, EMPTY_MARK, EMPTY_MARK, MARKS.BLUE], 
+                endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE],
                 horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A3_B3, patterns: { p1: 'n', p2: 'a' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_C1_D1, patterns: { p1: 'l', p2: 'a' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'r', p2: 'a' } }, { line: H_LINE_C4_D4, patterns: { p1: 'r', p2: 'a' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'r', p2: 'a' } }, { line: H_LINE_C7_D7, patterns: { p1: 'r', p2: 'a' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'r', p2: 'a' } }
+                    { line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'n', p2: 'a' } },
+                    { line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'a', p2: 'n' } },
+                    { line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'l', p2: 'a' } },
+                    { line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'r', p2: 'a' } }, { line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'r', p2: 'a' } },
+                    { line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'r', p2: 'a' } }, { line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'r', p2: 'a' } },
+                    { line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'r', p2: 'a' } }
                 ],
                 areaOnStates: [ true, true, false, true, true, false, false, true, true, true, true, true ],
                 hints: [[0, 'p2'], [5, 'p1']]
             },
-            {
-                startMarks: ['⭐️', '💔', '☘️', '💠'], endMarks: ['🌟', '❤️', '🍀', '💎'],
-                horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B2_C2, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'l' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'a', p2: 'r' } }, { line: H_LINE_C4_D4, patterns: { p1: 'n', p2: 'a' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'l' } }, { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'r' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'n', p2: 'a' } }
-                ],
-                areaOnStates: [ true, false, true, false, true, true, true, false, true, false, true, false ],
-                hints: [[1, 'p2'], [7, 'p1']]
-            },
-            {
-                startMarks: ['⭐️', '💔', '☘️', '💠'], endMarks: ['🌟', '❤️', '🍀', '💎'],
-                horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A3_B3, patterns: { p1: 'n', p2: 'n' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A6_B6, patterns: { p1: 'n', p2: 'n' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A9_B9, patterns: { p1: 'n', p2: 'n' } },
-                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_B5_C5, patterns: { p1: 'n', p2: 'n' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'n', p2: 'n' } }, { line: H_LINE_C4_D4, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'n', p2: 'n' } }, { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'n', p2: 'n' } }
-                ],
-                areaOnStates: [ false, true, false, true, false, true, false, true, false, true, false, true ],
-                hints: [[3, 'p2']]
-            },
-            {
-                startMarks: ['⭐️', '💔', '☘️', '💠'], endMarks: ['🌟', '❤️', '🍀', '💎'],
-                horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'l', p2: 'r' } }, { line: H_LINE_A3_B3, patterns: { p1: 'r', p2: 'l' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A6_B6, patterns: { p1: 'l', p2: 'a' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'r', p2: 'a' } }, { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'l' } }, { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'r' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'l', p2: 'r' } }, { line: H_LINE_C4_D4, patterns: { p1: 'r', p2: 'l' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_C7_D7, patterns: { p1: 'l', p2: 'a' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'r', p2: 'a' } }
-                ],
-                areaOnStates: [ true, true, true, true, true, true, true, true, true, true, true, true ],
-                hints: []
-            },
-            {
-                startMarks: ['⭐️', '💔', '☘️', '💠'], endMarks: ['🌟', '❤️', '🍀', '💎'],
-                horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_C4_D4, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'a' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'a', p2: 'a' } }
-                ],
-                areaOnStates: [ true, true, false, true, false, true, false, true, true, true, false, true ],
-                hints: []
-            },
-            {
-                startMarks: ['⭐️', '💔', '☘️', '💠'], endMarks: ['🌟', '❤️', '🍀', '💎'],
-                horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_A4_B4, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_B2_C2, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_B8_C8, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE_C6_D6, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'a', p2: 'n' } }
-                ],
-                areaOnStates: [ true, false, false, false, true, false, false, false, true, true, true, false ],
-                hints: []
-            },
-            {
-                startMarks: ['⭐️', '💔', '☘️', '💠'], endMarks: ['🌟', '❤️', '🍀', '💎'],
-                horizontalConnections: [
-                    { line: H_LINE_A1_B1, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_A3_B3, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A4_B4, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_A6_B6, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_A7_B7, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_A9_B9, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B2_C2, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_B5_C5, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_B8_C8, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_C1_D1, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C3_D3, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_C4_D4, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C6_D6, patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE_C7_D7, patterns: { p1: 'a', p2: 'n' } },
-                    { line: H_LINE_C9_D9, patterns: { p1: 'n', p2: 'a' } }
-                ],
-                areaOnStates: [ true, true, true, true, true, true, true, true, true, true, true, true ],
-                hints: []
-            }
+            { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'l' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'a', p2: 'r' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'a', p2: 'l' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'a', p2: 'r' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'n', p2: 'a' } }], areaOnStates: [ true, false, true, false, true, true, true, false, true, false, true, false ], hints: [[1, 'p2'], [7, 'p1']] },
+            { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'n', p2: 'n' } }], areaOnStates: [ false, true, false, true, false, true, false, true, false, true, false, true ], hints: [[3, 'p2']] },
+            { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'l', p2: 'r' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'r', p2: 'l' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'l', p2: 'a' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'r', p2: 'a' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'a', p2: 'l' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'a', p2: 'r' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'l', p2: 'r' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'r', p2: 'l' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'l', p2: 'a' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'r', p2: 'a' } }], areaOnStates: [ true, true, true, true, true, true, true, true, true, true, true, true ], hints: [] },
+            { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'a', p2: 'a' } }], areaOnStates: [ true, true, false, true, false, true, false, true, true, true, false, true ], hints: [] },
+            { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'a', p2: 'n' } }], areaOnStates: [ true, false, false, false, true, false, false, false, true, true, true, false ], hints: [] },
+            { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'n', p2: 'a' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'n', p2: 'a' } }], areaOnStates: [ true, true, true, true, true, true, true, true, true, true, true, true ], hints: [] },
         ];
 
-        // Get DOM elements
-        const canvas = document.getElementById('amidakujiCanvas');
-        const ctx = canvas.getContext('2d');
-        // ★ 追加: パーティクル用キャンバスの要素とコンテキスト
-        const confettiCanvas = document.getElementById('confettiCanvas');
-        const confettiCtx = confettiCanvas.getContext('2d');
-        const goButton = document.getElementById('goButton');
-        const resetButton = document.getElementById('resetButton');
-        const stageButton = document.getElementById('stageButton');
-        const hintButton = document.getElementById('hintButton');
-        const resultModal = document.getElementById('resultModal');
-        const resultText = document.getElementById('resultText');
-        const modalResetButton = document.getElementById('modalResetButton');
-        const nextStageButton = document.getElementById('nextStageButton');
-        const stageSelectModal = document.getElementById('stageSelectModal');
-        const stageButtonsFrame = document.getElementById('stageButtonsFrame');
-        const stageButtonsContainer = document.getElementById('stageButtonsContainer');
-        const gameWrapper = document.getElementById('gameWrapper');
-        const stageSelectTitle = document.getElementById('stageSelectTitle');
+        // --- DOM要素 (DOM Elements) ---
+        const DOMElements = {
+            canvas: document.getElementById('amidakujiCanvas'),
+            confettiCanvas: document.getElementById('confettiCanvas'),
+            goButton: document.getElementById('goButton'),
+            resetButton: document.getElementById('resetButton'),
+            stageButton: document.getElementById('stageButton'),
+            hintButton: document.getElementById('hintButton'),
+            resultModal: document.getElementById('resultModal'),
+            resultText: document.getElementById('resultText'),
+            modalResetButton: document.getElementById('modalResetButton'),
+            nextStageButton: document.getElementById('nextStageButton'),
+            stageSelectModal: document.getElementById('stageSelectModal'),
+            stageButtonsFrame: document.getElementById('stageButtonsFrame'),
+            stageButtonsContainer: document.getElementById('stageButtonsContainer'),
+            gameWrapper: document.getElementById('gameWrapper'),
+            stageSelectTitle: document.getElementById('stageSelectTitle'),
+        };
+        const ctx = DOMElements.canvas.getContext('2d');
+        const confettiCtx = DOMElements.confettiCanvas.getContext('2d');
 
-        // Game state variables
+        // --- ゲーム状態変数 (Game State) ---
         let verticalLineX = [];
         let pointY = [];
         let ladderMap = {};
@@ -556,7 +455,10 @@
         let clearParticles = [];
         let clearAnimationId = null;
         let isFinishingAnimation = false;
+        let finishedMarksByGoal = {};
+        let GOAL_AREA_HEIGHT; 
 
+        // --- ローカルストレージ管理 (Storage Management) ---
         function getClearStatus() {
             const status = localStorage.getItem(CLEAR_STATUS_STORAGE_KEY);
             return status ? JSON.parse(status) : new Array(GAME_PRESETS.length).fill(false);
@@ -566,6 +468,7 @@
             localStorage.setItem(CLEAR_STATUS_STORAGE_KEY, JSON.stringify(statusArray));
         }
 
+        // --- ユーティリティ関数 (Utility Functions) ---
         function hexToRgba(hex, alpha) {
             let r = 0, g = 0, b = 0;
             if (hex.length === 7) {
@@ -584,26 +487,33 @@
             return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
         }
 
+        // --- レイアウトと座標計算 (Layout and Coordinate Setup) ---
         function setupCoordinates() {
             verticalLineX = [];
             pointY = [];
+            
+            GOAL_AREA_HEIGHT = DOMElements.canvas.height * GOAL_AREA_HEIGHT_RATIO;
+            const lineEndY = DOMElements.canvas.height - GOAL_AREA_HEIGHT;
+
             const horizontalMarginRatio = 0.15;
-            const effectiveCanvasWidth = canvas.width * (1 - 2 * horizontalMarginRatio);
+            const effectiveCanvasWidth = DOMElements.canvas.width * (1 - 2 * horizontalMarginRatio);
             const dynamicLineSpacingX = effectiveCanvasWidth / (LINE_COUNT - 1);
-            const startX = canvas.width * horizontalMarginRatio;
+            const startX = DOMElements.canvas.width * horizontalMarginRatio;
             for (let i = 0; i < LINE_COUNT; i++) {
                 verticalLineX.push(startX + i * dynamicLineSpacingX);
             }
+
             const verticalMarginRatio = 0.1;
-            const dynamicLineStartY = canvas.height * verticalMarginRatio;
-            LINE_START_Y = dynamicLineStartY;
-            const effectiveLineHeight = canvas.height * (1 - 2 * verticalMarginRatio);
+            LINE_START_Y = DOMElements.canvas.height * verticalMarginRatio;
+            
+            const effectiveLineHeight = lineEndY - LINE_START_Y;
             const firstPointY = LINE_START_Y + (effectiveLineHeight * 0.1);
-            const lastPointY = (canvas.height - LINE_START_Y) - (effectiveLineHeight * 0.1);
+            const lastPointY = lineEndY - (effectiveLineHeight * 0.1);
             const dynamicPointSpacingY = (lastPointY - firstPointY) / (POINT_COUNT_PER_LINE - 1);
             for (let i = 0; i < POINT_COUNT_PER_LINE; i++) {
                 pointY.push(firstPointY + i * dynamicPointSpacingY);
             }
+            
             const areaWidth = dynamicLineSpacingX * 1.2;
             const eightyPercentLineHeight = effectiveLineHeight * 0.8;
             const smallAreaHeight = eightyPercentLineHeight / 3;
@@ -632,7 +542,7 @@
             ].map((pos, index) => ({
                 ...pos, isSelected: false, associatedLines: [], color: AREA_COLORS[index], isOn: false
             }));
-            MARK_FONT_SIZE = canvas.height * 0.05;
+            MARK_FONT_SIZE = DOMElements.canvas.height * 0.05;
         }
 
         function associateHorizontalLinesWithArea(targetArea) {
@@ -649,9 +559,10 @@
             });
         }
         
+        // --- UIイベントハンドラ (UI Event Handlers) ---
         function handleCanvasClick(event) {
-            if (isGameRunning || stageSelectModal.classList.contains('show')) return;
-            const rect = canvas.getBoundingClientRect();
+            if (isGameRunning || DOMElements.stageSelectModal.classList.contains('show')) return;
+            const rect = DOMElements.canvas.getBoundingClientRect();
             let clientX, clientY;
             if (event.type === 'touchstart') {
                 clientX = event.touches[0].clientX; clientY = event.touches[0].clientY;
@@ -703,8 +614,8 @@
                 wrapperWidth = availableWidth;
                 wrapperHeight = wrapperWidth / overallAspectRatio;
             }
-            gameWrapper.style.width = `${wrapperWidth}px`;
-            gameWrapper.style.height = `${wrapperHeight}px`;
+            DOMElements.gameWrapper.style.width = `${wrapperWidth}px`;
+            DOMElements.gameWrapper.style.height = `${wrapperHeight}px`;
             const titleHeightEstimate = 54;
             const buttonHeightEstimate = (0.75 * 16 * 2) + (16 * 1) + (1.5 * 16);
             const wrapperPadding = 2 * 18;
@@ -723,48 +634,47 @@
                 currentCanvasWidth = canvasAvailableWidth;
                 currentCanvasHeight = currentCanvasWidth / canvasInternalAspectRatio;
             }
-            canvas.width = currentCanvasWidth;
-            canvas.height = currentCanvasHeight;
+            DOMElements.canvas.width = currentCanvasWidth;
+            DOMElements.canvas.height = currentCanvasHeight;
 
-            // ★ 変更: パーティクル用キャンバスのサイズも更新
-            confettiCanvas.width = window.innerWidth;
-            confettiCanvas.height = window.innerHeight;
+            DOMElements.confettiCanvas.width = window.innerWidth;
+            DOMElements.confettiCanvas.height = window.innerHeight;
 
-            MARK_SPEED = (canvas.height / TARGET_ANIMATION_SECONDS) / 60;
+            MARK_SPEED = (DOMElements.canvas.height / TARGET_ANIMATION_SECONDS) / 60;
 
             const buttonSize = Math.min(currentCanvasHeight / 10, 50);
 
-            hintButton.style.width = `${buttonSize}px`;
-            hintButton.style.height = `${buttonSize}px`;
-            hintButton.style.borderRadius = `${buttonSize * 0.1}px`;
-            hintButton.style.fontSize = `${buttonSize / 2}px`;
+            DOMElements.hintButton.style.width = `${buttonSize}px`;
+            DOMElements.hintButton.style.height = `${buttonSize}px`;
+            DOMElements.hintButton.style.borderRadius = `${buttonSize * 0.1}px`;
+            DOMElements.hintButton.style.fontSize = `${buttonSize / 2}px`;
             
-            stageButton.style.height = `${buttonSize}px`;
-            resetButton.style.height = `${buttonSize}px`;
-            goButton.style.height = `${buttonSize}px`;
+            DOMElements.stageButton.style.height = `${buttonSize}px`;
+            DOMElements.resetButton.style.height = `${buttonSize}px`;
+            DOMElements.goButton.style.height = `${buttonSize}px`;
 
-            const sideButtons = [stageButton, resetButton, hintButton];
+            const sideButtons = [DOMElements.stageButton, DOMElements.resetButton, DOMElements.hintButton];
         
-            hintButton.style.padding = '0.75rem 1.5rem';
+            DOMElements.hintButton.style.padding = '0.75rem 1.5rem';
             sideButtons.forEach(btn => btn.style.width = 'auto');
 
             const maxWidth = Math.max(
-                stageButton.offsetWidth,
-                resetButton.offsetWidth,
-                hintButton.offsetWidth
+                DOMElements.stageButton.offsetWidth,
+                DOMElements.resetButton.offsetWidth,
+                DOMElements.hintButton.offsetWidth
             );
 
             sideButtons.forEach(btn => {
                 btn.style.width = `${maxWidth}px`;
             });
             
-            hintButton.style.padding = '';
+            DOMElements.hintButton.style.padding = '';
 
-            const currentFontSize = parseFloat(getComputedStyle(goButton).fontSize);
+            const currentFontSize = parseFloat(getComputedStyle(DOMElements.goButton).fontSize);
             const buttonPaddingY = (buttonSize - currentFontSize) / 2;
             
-            goButton.style.paddingTop = `${buttonPaddingY}px`;
-            goButton.style.paddingBottom = `${buttonPaddingY}px`;
+            DOMElements.goButton.style.paddingTop = `${buttonPaddingY}px`;
+            DOMElements.goButton.style.paddingBottom = `${buttonPaddingY}px`;
 
             let stageSelectModalHeight = Math.min(currentCanvasHeight * 3 / 4, 270);
             let stageSelectModalWidth = stageSelectModalHeight * (3 / 2);
@@ -775,16 +685,15 @@
             }
             const stageSelectTitleFontSize = stageSelectModalHeight / 18;
             const stageSelectTitleMarginBottom = stageSelectTitleFontSize / 4;
-            if (stageSelectTitle) {
-                stageSelectTitle.style.fontSize = `${stageSelectTitleFontSize}px`;
-                stageSelectTitle.style.marginBottom = `${stageSelectTitleMarginBottom}px`;
+            if (DOMElements.stageSelectTitle) {
+                DOMElements.stageSelectTitle.style.fontSize = `${stageSelectTitleFontSize}px`;
+                DOMElements.stageSelectTitle.style.marginBottom = `${stageSelectTitleMarginBottom}px`;
             }
             const stageButtonsFrameHeight = stageSelectModalHeight - (16 * 2) - stageSelectTitleFontSize - stageSelectTitleMarginBottom;
-            const stageButtonsFrame = document.getElementById('stageButtonsFrame');
-            if (stageButtonsFrame) {
-                stageButtonsFrame.style.height = `${stageButtonsFrameHeight}px`;
-                stageButtonsFrame.style.flexGrow = '0';
-                stageButtonsFrame.style.minHeight = 'auto';
+            if (DOMElements.stageButtonsFrame) {
+                DOMElements.stageButtonsFrame.style.height = `${stageButtonsFrameHeight}px`;
+                DOMElements.stageButtonsFrame.style.flexGrow = '0';
+                DOMElements.stageButtonsFrame.style.minHeight = 'auto';
             }
 
             setupCoordinates();
@@ -794,9 +703,9 @@
             initializeLadderMap();
             if (!isGameRunning) {
                 marks.forEach((mark, index) => {
-                    if(verticalLineX[index]) {
-                        mark.x = verticalLineX[index]; mark.y = LINE_START_Y * 0.65;
-                        mark.originalX = verticalLineX[index]; mark.originalY = LINE_START_Y * 0.65;
+                    if (mark && mark.char && verticalLineX[index]) {
+                         mark.x = verticalLineX[index]; mark.y = LINE_START_Y * 0.65;
+                         mark.originalX = verticalLineX[index]; mark.originalY = LINE_START_Y * 0.65;
                     }
                 });
                 areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
@@ -804,6 +713,7 @@
             drawGame();
         }
 
+        // --- ゲームロジック (Game Logic) ---
         function initializeGameData(presetIndex = 0) {
             const selectedPreset = GAME_PRESETS[presetIndex];
             currentStartMarks = selectedPreset.startMarks;
@@ -816,7 +726,7 @@
                 if (areas[index]) areas[index].isOn = isOnState;
             });
             isHintActive = false;
-            hintButton.classList.remove('active');
+            DOMElements.hintButton.classList.remove('active');
             originalPatternsBeforeHint = [];
             initializeLadderMap();
         }
@@ -840,7 +750,7 @@
 
         function toggleHint() {
             isHintActive = !isHintActive;
-            hintButton.classList.toggle('active', isHintActive);
+            DOMElements.hintButton.classList.toggle('active', isHintActive);
             const currentHints = GAME_PRESETS[currentStageIndex].hints;
             if (isHintActive) {
                 originalPatternsBeforeHint = [];
@@ -867,14 +777,15 @@
             drawGame();
         }
         
-        function drawGame(options = { drawMovingElements: true }) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // --- 描画関連 (Drawing Functions) ---
+        function drawAmidaGrid() {
+            const lineEndY = DOMElements.canvas.height - GOAL_AREA_HEIGHT;
             ctx.strokeStyle = '#a0aec0';
             ctx.lineWidth = 2;
             verticalLineX.forEach(x => {
                 ctx.beginPath();
                 ctx.moveTo(x, LINE_START_Y);
-                ctx.lineTo(x, canvas.height - LINE_START_Y);
+                ctx.lineTo(x, lineEndY);
                 ctx.stroke();
             });
             ctx.lineWidth = 2;
@@ -898,18 +809,9 @@
                     ctx.stroke();
                 }
             }
+        }
 
-            if (options.drawMovingElements) {
-                particles.forEach(p => {
-                    ctx.globalAlpha = Math.max(0, p.lifespan / p.initialLifespan);
-                    ctx.beginPath();
-                    ctx.rect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
-                    ctx.fillStyle = p.color;
-                    ctx.fill();
-                });
-                ctx.globalAlpha = 1.0; 
-            }
-            
+        function drawClickableAreas() {
             areas.forEach((area, i) => {
                 const isHintArea = GAME_PRESETS[currentStageIndex].hints.some(h => h[0] === i);
                 if (!area.isOn || (isHintActive && isHintArea)) return;
@@ -925,27 +827,91 @@
                 ctx.lineWidth = 1;
                 ctx.stroke();
             });
-
-            ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+        }
+        
+        // ★ 変更点: drawStaticMarksをdrawStartMarksとdrawGoalMarksに分割
+        function drawStartMarks() {
+            ctx.font = `900 ${MARK_FONT_SIZE}px "Font Awesome 6 Free"`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            currentStartMarks.forEach((char, i) => {
+
+            currentStartMarks.forEach((mark, i) => {
                 const x = verticalLineX[i];
                 const markY = LINE_START_Y * 0.65;
                 const labelY = LINE_START_Y * 0.25;
-                ctx.fillText(char, x, markY);
+                if (mark) {
+                    ctx.fillStyle = mark.color;
+                    ctx.fillText(mark.icon, x, markY);
+                }
                 ctx.fillStyle = '#485462';
                 ctx.font = `${MARK_FONT_SIZE * 0.6}px 'Inter', sans-serif`;
                 ctx.fillText(String.fromCharCode(65 + i), x, labelY);
-                ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+                ctx.font = `900 ${MARK_FONT_SIZE}px "Font Awesome 6 Free"`;
             });
+        }
 
-            currentEndMarks.forEach((char, i) => ctx.fillText(char, verticalLineX[i], canvas.height - (MARK_FONT_SIZE / 2)));
-
-            const now = Date.now();
+        function drawGoalMarks() {
+            const lineEndY = DOMElements.canvas.height - GOAL_AREA_HEIGHT;
+            ctx.font = `900 ${MARK_FONT_SIZE}px "Font Awesome 6 Free"`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
+            currentEndMarks.forEach((mark, i) => {
+                if (mark) {
+                    ctx.fillStyle = mark.color;
+                    ctx.fillText(mark.icon, verticalLineX[i], lineEndY);
+                }
+            });
+        }
+
+        function drawAnimatedMarksAndParticles() {
+            ctx.font = `900 ${MARK_FONT_SIZE}px "Font Awesome 6 Free"`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            marks.forEach(mark => {
+                if (mark && mark.char && mark.state !== 'finished') {
+                    ctx.fillStyle = mark.char.color;
+                    ctx.fillText(mark.char.icon, mark.x, mark.y);
+                }
+            });
+
+            particles.forEach(p => {
+                ctx.globalAlpha = Math.max(0, p.lifespan / p.initialLifespan);
+                ctx.beginPath();
+                ctx.rect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+        }
+
+        function drawFinishedMarks() {
+            const lineEndY = DOMElements.canvas.height - GOAL_AREA_HEIGHT;
+            const finishedMarkSize = MARK_FONT_SIZE * 0.6;
+            const verticalSpacing = finishedMarkSize * 1.2;
+
+            ctx.font = `900 ${finishedMarkSize}px "Font Awesome 6 Free"`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            for (let goalIndex = 0; goalIndex < LINE_COUNT; goalIndex++) {
+                const finishedMarks = finishedMarksByGoal[goalIndex];
+                if (finishedMarks && finishedMarks.length > 0) {
+                    const goalMarkX = verticalLineX[goalIndex];
+                    let startY = lineEndY + verticalSpacing;
+                    finishedMarks.forEach(mark => {
+                        ctx.fillStyle = mark.color;
+                        ctx.fillText(mark.icon, goalMarkX, startY);
+                        startY += verticalSpacing;
+                    });
+                }
+            }
+        }
+
+        function drawPulsingEffects() {
+            const now = Date.now();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             const drawPulsingStar = (line, isRightToLeft) => {
                 const x1 = verticalLineX[line.fromLine];
                 const x2 = verticalLineX[line.toLine];
@@ -961,15 +927,29 @@
             };
             leftOnlyLines.forEach(line => drawPulsingStar(line, true));
             rightOnlyLines.forEach(line => drawPulsingStar(line, false));
-
-            if (options.drawMovingElements) {
-                ctx.font = `${MARK_FONT_SIZE}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                marks.forEach(mark => ctx.fillText(mark.char, mark.x, mark.y));
-            }
         }
 
+        function drawGame(options = { drawMovingElements: true }) {
+            ctx.clearRect(0, 0, DOMElements.canvas.width, DOMElements.canvas.height);
+            ctx.globalAlpha = 0.9;
+            ctx.fillStyle = '#2d3748';
+            ctx.fillRect(0, 0, DOMElements.canvas.width, DOMElements.canvas.height);
+            ctx.globalAlpha = 1.0;
+
+            drawAmidaGrid();
+            drawClickableAreas();
+            
+            // ★ 変更点: 描画順序を変更
+            drawStartMarks();
+            drawPulsingEffects();
+            if (options.drawMovingElements) {
+                drawAnimatedMarksAndParticles();
+            }
+            drawGoalMarks();
+            drawFinishedMarks();
+        }
+
+        // --- アニメーションとエフェクト (Animation and Effects) ---
         function createSuccessBurst(x, y) {
             const particleCount = 5;
             const baseAngle = -Math.PI / 2;
@@ -981,21 +961,15 @@
 
             for (let i = 0; i < particleCount; i++) {
                 const angle = startAngle + i * angleIncrement;
-                particles.push({
-                    x: x,
-                    y: y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    size: Math.random() * 8 + 2,
-                    lifespan: initialLifespan,
-                    initialLifespan: initialLifespan,
-                    color: '#63b3ed'
-                });
+                particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, size: Math.random() * 8 + 2, lifespan: initialLifespan, initialLifespan });
             }
         }
-
+        
         function updateMarkPosition(mark) {
             if (mark.state === 'finished') return;
+            
+            const lineEndY = DOMElements.canvas.height - GOAL_AREA_HEIGHT;
+
             if (mark.state === 'moving_down') {
                 mark.y += MARK_SPEED;
                 if (mark.currentPointIndex + 1 < POINT_COUNT_PER_LINE && mark.y >= pointY[mark.currentPointIndex + 1]) {
@@ -1011,13 +985,16 @@
                         }
                     }
                 }
-                if (mark.y >= canvas.height - (MARK_FONT_SIZE / 2)) {
-                    mark.y = canvas.height - (MARK_FONT_SIZE / 2);
+                if (mark.y >= lineEndY) {
                     mark.state = 'finished';
                     mark.finalLineIndex = mark.currentLineIndex;
-
-                    if (mark.char !== '' && mark.targetEndMark === currentEndMarks[mark.finalLineIndex]) {
-                        createSuccessBurst(mark.x, mark.y);
+                    
+                    if (mark.char && finishedMarksByGoal[mark.finalLineIndex]) {
+                        finishedMarksByGoal[mark.finalLineIndex].push(mark.char);
+                    }
+                    
+                    if (mark.char && mark.targetEndMark === currentEndMarks[mark.finalLineIndex]) {
+                        createSuccessBurst(verticalLineX[mark.finalLineIndex], lineEndY);
                     }
 
                     checkGameEnd();
@@ -1052,20 +1029,11 @@
             
             if (!isFinishingAnimation) {
                 marks.forEach(mark => {
-                    if (mark.state !== 'finished' && mark.char !== '') {
+                    if (mark.state !== 'finished' && mark.char) {
                         const particleCount = 1;
                         for (let i = 0; i < particleCount; i++) {
                             const initialLifespan = 40;
-                            particles.push({
-                                x: mark.x,
-                                y: mark.y,
-                                vx: (Math.random() - 0.5) * 1.2,
-                                vy: (Math.random() - 0.5) * 1.2,
-                                size: Math.random() * 4 + 1,
-                                lifespan: initialLifespan,
-                                initialLifespan: initialLifespan,
-                                color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)]
-                            });
+                            particles.push({ x: mark.x, y: mark.y, vx: (Math.random() - 0.5) * 1.2, vy: (Math.random() - 0.5) * 1.2, size: Math.random() * 4 + 1, lifespan: initialLifespan, initialLifespan });
                         }
                     }
                 });
@@ -1076,155 +1044,108 @@
                 p.x += p.vx;
                 p.y += p.vy;
                 p.lifespan--;
-                if (p.lifespan <= 0) {
-                    particles.splice(i, 1);
-                }
+                if (p.lifespan <= 0) particles.splice(i, 1);
             }
 
             drawGame();
             
             animationFrameId = requestAnimationFrame(animate);
         }
-
+        
         function checkGameEnd() {
             finishedMarksCount++;
-            if (finishedMarksCount === marks.filter(m => m.char !== '').length) {
+            if (finishedMarksCount === marks.filter(m => m.char).length) {
                 isFinishingAnimation = true;
                 
                 setTimeout(() => {
                     isGameRunning = false;
-
-                    const isClear = marks.every(m => m.char === '' || m.targetEndMark === currentEndMarks[m.finalLineIndex]);
+                    const isClear = marks.every(m => !m.char || m.targetEndMark === currentEndMarks[m.finalLineIndex]);
                     gameResult = isClear ? 'clear' : 'fail';
+                    
                     if (isClear) {
                         const clearStatus = getClearStatus();
                         clearStatus[currentStageIndex] = true;
                         saveClearStatus(clearStatus);
-                    
                         const isFinalStage = currentStageIndex === GAME_PRESETS.length - 1;
-                        if (isFinalStage) {
-                            showResultPanel('おめでとう！最後のステージをクリアした！', true);
-                        } else {
-                            showResultPanel('クリア！', false);
-                        }
-
+                        showResultPanel(isFinalStage ? 'おめでとう！最後のステージをクリアした！' : 'クリア！', isFinalStage);
                     } else {
                         showResultPanel('失敗！', false);
                     }
 
-                    goButton.textContent = 'Go!';
-                    goButton.style.backgroundColor = '#48bb78';
-                    goButton.disabled = true;
+                    DOMElements.goButton.textContent = 'Go!';
+                    DOMElements.goButton.style.backgroundColor = '#48bb78';
+                    DOMElements.goButton.disabled = true;
                     startStarAnimation();
                 }, 1000);
             }
         }
         
-        // ★ 変更: パーティクル生成ロジックを修正
         function createClearConfetti() {
             clearParticles = []; 
             const particleCount = 100;
             const durationInFrames = 1.1 * 60;
             const colors = AREA_COLORS;
-            
-            // ★ 変更: ゲームキャンバスのスクリーン上の位置を取得
-            const rect = canvas.getBoundingClientRect();
+            const rect = DOMElements.canvas.getBoundingClientRect();
 
             for (let i = 0; i < particleCount; i++) {
                 const fromLeft = Math.random() < 0.5;
-                // ★ 変更: パーティクルの発生源をゲームキャンバスの左下・右下に合わせる
                 const x = fromLeft ? rect.left : rect.right;
                 const y = rect.bottom;
-
                 const angle = fromLeft ? Math.random() * -Math.PI / 2 : Math.random() * -Math.PI / 2 - Math.PI / 2;
                 const speed = Math.random() * 9 + 3;
-
-                clearParticles.push({
-                    x: x,
-                    y: y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    size: Math.random() * 22 + 6,
-                    lifespan: durationInFrames,
-                    initialLifespan: durationInFrames,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    skewX: (Math.random() - 0.5) * 0.9
-                });
+                clearParticles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, size: Math.random() * 22 + 6, lifespan: durationInFrames, initialLifespan: durationInFrames, color: colors[Math.floor(Math.random() * colors.length)], skewX: (Math.random() - 0.5) * 0.9 });
             }
         }
         
-        // ★ 変更: パーティクルアニメーションのロジックを修正
         function animateClearParticles() {
-            if (clearAnimationId) {
-                cancelAnimationFrame(clearAnimationId);
-            }
-
+            if (clearAnimationId) cancelAnimationFrame(clearAnimationId);
             function loop() {
-                // ★ 変更: 専用のキャンバスをクリア
-                confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-
+                confettiCtx.clearRect(0, 0, DOMElements.confettiCanvas.width, DOMElements.confettiCanvas.height);
                 for (let i = clearParticles.length - 1; i >= 0; i--) {
                     const p = clearParticles[i];
                     p.x += p.vx;
                     p.y += p.vy;
                     p.lifespan--;
-
                     if (p.lifespan <= 0) {
                         clearParticles.splice(i, 1);
                         continue;
                     }
-                    
-                    // ★ 変更: 描画コンテキストを confettiCtx に変更
                     confettiCtx.save();
                     confettiCtx.globalAlpha = Math.max(0, p.lifespan / p.initialLifespan);
                     confettiCtx.fillStyle = p.color;
-                    
                     confettiCtx.translate(p.x, p.y);
                     confettiCtx.transform(1, 0, p.skewX, 1, 0, 0);
                     confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-                    
                     confettiCtx.restore();
                 }
-                
                 if (clearParticles.length > 0) {
                     clearAnimationId = requestAnimationFrame(loop);
                 } else {
-                    // ★ 変更: アニメーション終了時に専用キャンバスを非表示にする
-                    confettiCanvas.style.display = 'none';
+                    DOMElements.confettiCanvas.style.display = 'none';
                     clearAnimationId = null;
                 }
             }
-            
             clearAnimationId = requestAnimationFrame(loop);
         }
         
-        // ★ 変更: `showResultPanel`のロジックを修正
+        // --- ゲーム状態管理 (Game State Management) ---
         function showResultPanel(message, isFinalClear = false) {
-            resultText.textContent = message;
-
-            resultText.style.color = '';
-            resultText.style.fontWeight = '';
-            resultText.style.fontSize = '';
-            
-            if (isFinalClear) {
-                resultText.style.color = '#ecc94b';
-                resultText.style.fontWeight = 'bold';
-                resultText.style.fontSize = '1.5em';
-            }
-
-            nextStageButton.style.display = (gameResult === 'clear' && currentStageIndex < GAME_PRESETS.length - 1) ? 'inline-block' : 'none';
-            resultModal.classList.add('show');
+            DOMElements.resultText.textContent = message;
+            DOMElements.resultText.style.color = isFinalClear ? '#ecc94b' : '';
+            DOMElements.resultText.style.fontWeight = isFinalClear ? 'bold' : '';
+            DOMElements.resultText.style.fontSize = isFinalClear ? '1.5em' : '';
+            DOMElements.nextStageButton.style.display = (gameResult === 'clear' && currentStageIndex < GAME_PRESETS.length - 1) ? 'inline-block' : 'none';
+            DOMElements.resultModal.classList.add('show');
 
             if (gameResult === 'clear') {
-                // ★ 変更: 専用キャンバスを表示してからアニメーションを開始
-                confettiCanvas.style.display = 'block';
+                DOMElements.confettiCanvas.style.display = 'block';
                 createClearConfetti();
                 animateClearParticles();
             }
         }
 
         function hideResultPanel() {
-            resultModal.classList.remove('show');
+            DOMElements.resultModal.classList.remove('show');
         }
 
         function resetGame() {
@@ -1237,47 +1158,43 @@
             softResetGame();
         }
         
-        // ★ 変更: `softResetGame`にクリア演出の停止処理を追加
         function softResetGame() {
             cancelAnimationFrame(animationFrameId);
-            
-            // クリア演出が動いていれば停止・非表示にする
             if(clearAnimationId) cancelAnimationFrame(clearAnimationId);
-            if(confettiCanvas) confettiCanvas.style.display = 'none';
+            if(DOMElements.confettiCanvas) DOMElements.confettiCanvas.style.display = 'none';
 
             isGameRunning = false;
             isFinishingAnimation = false;
             finishedMarksCount = 0;
             gameResult = null;
-            goButton.disabled = false;
-            goButton.textContent = 'Go!';
-            goButton.style.backgroundColor = '#48bb78';
+            DOMElements.goButton.disabled = false;
+            DOMElements.goButton.textContent = 'Go!';
+            DOMElements.goButton.style.backgroundColor = '#48bb78';
             hideResultPanel();
             areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
             isHintActive = false;
-            hintButton.classList.remove('active');
+            DOMElements.hintButton.classList.remove('active');
             originalPatternsBeforeHint = [];
             particles = []; 
-            marks = currentStartMarks.map((char, index) => ({
-                id: String.fromCharCode(65 + index), 
-                char, 
-                x: verticalLineX[index], 
-                y: LINE_START_Y * 0.65,
-                originalX: verticalLineX[index], 
-                originalY: LINE_START_Y * 0.65,
-                currentLineIndex: index, 
-                currentPointIndex: -1, 
-                state: 'idle',
-                targetEndMark: MARK_TARGET_MAP[char], 
-                finalLineIndex: -1
-            }));
+            
+            finishedMarksByGoal = {};
+            for (let i = 0; i < LINE_COUNT; i++) {
+                finishedMarksByGoal[i] = [];
+            }
+            
+            marks = currentStartMarks.map((mark, index) => {
+                if (!mark) return { char: null, state: 'finished' };
+                const targetMark = currentEndMarks.find(endMark => endMark && endMark.id === mark.id) || null;
+                return { id: String.fromCharCode(65 + index), char: mark, x: verticalLineX[index], y: LINE_START_Y * 0.65, originalX: verticalLineX[index], originalY: LINE_START_Y * 0.65, currentLineIndex: index, currentPointIndex: -1, state: 'idle', targetEndMark: targetMark, finalLineIndex: -1 };
+            });
+
             drawGame();
             startStarAnimation();
         }
 
         function showStageSelectionPanel() {
             softResetGame(); 
-            stageButtonsContainer.innerHTML = ''; 
+            DOMElements.stageButtonsContainer.innerHTML = ''; 
             const clearStatus = getClearStatus();
             const stageSelectModalContent = document.querySelector('#stageSelectModal .modal-content');
             const modalHeight = stageSelectModalContent ? parseFloat(stageSelectModalContent.style.maxHeight) : 270; 
@@ -1291,19 +1208,19 @@
                 if (clearStatus[index]) button.classList.add('cleared');
                 if (index === currentStageIndex) button.classList.add('current-stage');
                 button.onclick = () => handleStageButtonClick(index);
-                stageButtonsContainer.appendChild(button);
+                DOMElements.stageButtonsContainer.appendChild(button);
             });
-            stageSelectModal.classList.add('show');
-            const currentStageBtn = stageButtonsContainer.querySelector('.current-stage');
+            DOMElements.stageSelectModal.classList.add('show');
+            const currentStageBtn = DOMElements.stageButtonsContainer.querySelector('.current-stage');
             if (currentStageBtn) {
                 requestAnimationFrame(() => {
-                    stageButtonsFrame.scrollTop = currentStageBtn.offsetTop - (stageButtonsFrame.clientHeight / 2) + (currentStageBtn.offsetHeight / 2);
+                    DOMElements.stageButtonsFrame.scrollTop = currentStageBtn.offsetTop - (DOMElements.stageButtonsFrame.clientHeight / 2) + (currentStageBtn.offsetHeight / 2);
                 });
             }
         }
 
         function hideStageSelectionPanel() {
-            stageSelectModal.classList.remove('show');
+            DOMElements.stageSelectModal.classList.remove('show');
         }
 
         function handleStageButtonClick(index) {
@@ -1322,43 +1239,40 @@
             starAnimationInterval = null;
         }
 
-        // Event listeners
-        goButton.addEventListener('click', () => {
-            if (isGameRunning) {
-                softResetGame();
-            } else {
-                stopStarAnimation();
-                isGameRunning = true;
-                marks.forEach(mark => { if (mark.char !== '') mark.state = 'moving_down'; });
-                goButton.textContent = 'Stop';
-                goButton.style.backgroundColor = '#dd6b20'; 
-                animate();
-            }
-        });
+        // --- 初期化 (Initialization) ---
+        function addEventListeners() {
+            DOMElements.goButton.addEventListener('click', () => {
+                if (isGameRunning) {
+                    softResetGame();
+                } else {
+                    stopStarAnimation();
+                    isGameRunning = true;
+                    marks.forEach(mark => { if (mark.char) mark.state = 'moving_down'; });
+                    DOMElements.goButton.textContent = 'Stop';
+                    DOMElements.goButton.style.backgroundColor = '#dd6b20'; 
+                    animate();
+                }
+            });
 
-        resetButton.addEventListener('click', resetGame);
-        modalResetButton.addEventListener('click', softResetGame);
-        
-        nextStageButton.addEventListener('click', () => {
-            if (currentStageIndex < GAME_PRESETS.length - 1) {
-                handleStageButtonClick(currentStageIndex + 1);
-            }
-        });
+            DOMElements.resetButton.addEventListener('click', resetGame);
+            DOMElements.modalResetButton.addEventListener('click', softResetGame);
+            
+            DOMElements.nextStageButton.addEventListener('click', () => {
+                if (currentStageIndex < GAME_PRESETS.length - 1) {
+                    handleStageButtonClick(currentStageIndex + 1);
+                }
+            });
 
-        stageButton.addEventListener('click', showStageSelectionPanel);
-        hintButton.addEventListener('click', toggleHint);
-        stageSelectModal.addEventListener('click', e => { if (e.target === stageSelectModal) hideStageSelectionPanel(); });
-        
-        window.addEventListener('resize', resizeCanvas);
-        window.onload = () => {
-            resizeCanvas();
-            initializeGameData(0);
-            softResetGame();
-            canvas.addEventListener('click', handleCanvasClick);
-            canvas.addEventListener('touchstart', handleCanvasClick, { passive: true });
+            DOMElements.stageButton.addEventListener('click', showStageSelectionPanel);
+            DOMElements.hintButton.addEventListener('click', toggleHint);
+            DOMElements.stageSelectModal.addEventListener('click', e => { if (e.target === DOMElements.stageSelectModal) hideStageSelectionPanel(); });
+            
+            window.addEventListener('resize', resizeCanvas);
+            DOMElements.canvas.addEventListener('click', handleCanvasClick);
+            DOMElements.canvas.addEventListener('touchstart', handleCanvasClick, { passive: true });
 
             window.addEventListener('click', function(e) {
-                if (!canvas.contains(e.target)) {
+                if (!DOMElements.canvas.contains(e.target)) {
                     const needsRedraw = areas.some(a => a.isSelected);
                     if (needsRedraw) {
                         areas.forEach(a => {
@@ -1369,6 +1283,13 @@
                     }
                 }
             });
+        }
+
+        window.onload = () => {
+            resizeCanvas();
+            initializeGameData(0);
+            softResetGame();
+            addEventListeners();
         };
     </script>
 </body>
