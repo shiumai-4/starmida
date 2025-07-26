@@ -366,7 +366,8 @@
         const TARGET_ANIMATION_SECONDS = 2;
         const CLEAR_STATUS_STORAGE_KEY = 'amidakujiClearStatus';
         const PARTICLE_COLORS = ['#4299e1', '#63b3ed', '#90cdf4', '#a0aec0'];
-        const GOAL_AREA_HEIGHT_RATIO = 0.18;
+        const GOAL_AREA_HEIGHT_RATIO = 0.1;
+        const FINISHED_MARK_FADE_IN_DURATION = 600;
 
         // --- シンボル定義 (Symbolic Definitions) ---
         const P = Array.from({ length: 9 }, (_, i) => i);
@@ -503,7 +504,7 @@
                 verticalLineX.push(startX + i * dynamicLineSpacingX);
             }
 
-            const verticalMarginRatio = 0.1;
+            const verticalMarginRatio = 0.12;
             LINE_START_Y = DOMElements.canvas.height * verticalMarginRatio;
             
             const effectiveLineHeight = lineEndY - LINE_START_Y;
@@ -829,7 +830,6 @@
             });
         }
         
-        // ★ 変更点: drawStaticMarksをdrawStartMarksとdrawGoalMarksに分割
         function drawStartMarks() {
             ctx.font = `900 ${MARK_FONT_SIZE}px "Font Awesome 6 Free"`;
             ctx.textAlign = 'center';
@@ -885,28 +885,47 @@
             ctx.globalAlpha = 1.0;
         }
 
+        // --- ★★★ ここからが修正箇所 ★★★ ---
         function drawFinishedMarks() {
             const lineEndY = DOMElements.canvas.height - GOAL_AREA_HEIGHT;
             const finishedMarkSize = MARK_FONT_SIZE * 0.6;
-            const verticalSpacing = finishedMarkSize * 1.2;
+            // 横方向のスペースを定義
+            const horizontalSpacing = finishedMarkSize * 1.2;
+            // Y座標を固定値に設定
+            const fixedY = lineEndY + (finishedMarkSize * 1.2);
 
             ctx.font = `900 ${finishedMarkSize}px "Font Awesome 6 Free"`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
             for (let goalIndex = 0; goalIndex < LINE_COUNT; goalIndex++) {
-                const finishedMarks = finishedMarksByGoal[goalIndex];
-                if (finishedMarks && finishedMarks.length > 0) {
+                const goalData = finishedMarksByGoal[goalIndex];
+                if (goalData && goalData.marks.length > 0) {
+                    
+                    let alpha = 1.0;
+                    if (goalData.startTime) {
+                        const elapsedTime = Date.now() - goalData.startTime;
+                        alpha = Math.min(elapsedTime / FINISHED_MARK_FADE_IN_DURATION, 1.0);
+                    }
+                    ctx.globalAlpha = alpha;
+                    
                     const goalMarkX = verticalLineX[goalIndex];
-                    let startY = lineEndY + verticalSpacing;
-                    finishedMarks.forEach(mark => {
+                    // マーク群の合計幅を計算し、中央揃えになるように開始X座標を決定
+                    const totalWidth = (goalData.marks.length - 1) * horizontalSpacing;
+                    let startX = goalMarkX - totalWidth / 2;
+                    
+                    // X座標をずらしながら横に描画
+                    goalData.marks.forEach(mark => {
                         ctx.fillStyle = mark.color;
-                        ctx.fillText(mark.icon, goalMarkX, startY);
-                        startY += verticalSpacing;
+                        ctx.fillText(mark.icon, startX, fixedY);
+                        startX += horizontalSpacing;
                     });
+
+                    ctx.globalAlpha = 1.0;
                 }
             }
         }
+        // --- ★★★ ここまでが修正箇所 ★★★ ---
 
         function drawPulsingEffects() {
             const now = Date.now();
@@ -938,8 +957,6 @@
 
             drawAmidaGrid();
             drawClickableAreas();
-            
-            // ★ 変更点: 描画順序を変更
             drawStartMarks();
             drawPulsingEffects();
             if (options.drawMovingElements) {
@@ -950,7 +967,8 @@
         }
 
         // --- アニメーションとエフェクト (Animation and Effects) ---
-        function createSuccessBurst(x, y) {
+        // ★変更点: 引数にcolorを追加
+        function createSuccessBurst(x, y, color) {
             const particleCount = 5;
             const baseAngle = -Math.PI / 2;
             const spread = Math.PI * 0.8;
@@ -961,7 +979,17 @@
 
             for (let i = 0; i < particleCount; i++) {
                 const angle = startAngle + i * angleIncrement;
-                particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, size: Math.random() * 8 + 2, lifespan: initialLifespan, initialLifespan });
+                // ★変更点: 生成されるパーティクルにcolorプロパティを設定
+                particles.push({
+                    x,
+                    y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: Math.random() * 8 + 2,
+                    lifespan: initialLifespan,
+                    initialLifespan,
+                    color: color
+                });
             }
         }
         
@@ -990,11 +1018,14 @@
                     mark.finalLineIndex = mark.currentLineIndex;
                     
                     if (mark.char && finishedMarksByGoal[mark.finalLineIndex]) {
-                        finishedMarksByGoal[mark.finalLineIndex].push(mark.char);
+                        const goalData = finishedMarksByGoal[mark.finalLineIndex];
+                        goalData.marks.push(mark.char);
+                        goalData.startTime = Date.now();
                     }
                     
+                    // ★変更点: 正解時にマークの色をcreateSuccessBurst関数に渡す
                     if (mark.char && mark.targetEndMark === currentEndMarks[mark.finalLineIndex]) {
-                        createSuccessBurst(verticalLineX[mark.finalLineIndex], lineEndY);
+                        createSuccessBurst(verticalLineX[mark.finalLineIndex], lineEndY, mark.char.color);
                     }
 
                     checkGameEnd();
@@ -1020,8 +1051,15 @@
         }
 
         function animate() {
-            if (!isGameRunning) {
+            const isFading = Object.values(finishedMarksByGoal).some(goal => {
+                if (!goal.startTime) return false;
+                const elapsedTime = Date.now() - goal.startTime;
+                return elapsedTime < FINISHED_MARK_FADE_IN_DURATION;
+            });
+
+            if (!isGameRunning && particles.length === 0 && !isFading) {
                 cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
                 return;
             }
             
@@ -1033,7 +1071,17 @@
                         const particleCount = 1;
                         for (let i = 0; i < particleCount; i++) {
                             const initialLifespan = 40;
-                            particles.push({ x: mark.x, y: mark.y, vx: (Math.random() - 0.5) * 1.2, vy: (Math.random() - 0.5) * 1.2, size: Math.random() * 4 + 1, lifespan: initialLifespan, initialLifespan });
+                            // ★変更点: パーティクルに、追従しているマークの色を設定する
+                            particles.push({
+                                x: mark.x,
+                                y: mark.y,
+                                vx: (Math.random() - 0.5) * 1.2,
+                                vy: (Math.random() - 0.5) * 1.2,
+                                size: Math.random() * 4 + 1,
+                                lifespan: initialLifespan,
+                                initialLifespan,
+                                color: mark.char.color // この行を追加
+                            });
                         }
                     }
                 });
@@ -1150,6 +1198,7 @@
 
         function resetGame() {
             cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
             isGameRunning = false;
             gameResult = null;
             hideResultPanel(); 
@@ -1160,6 +1209,7 @@
         
         function softResetGame() {
             cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
             if(clearAnimationId) cancelAnimationFrame(clearAnimationId);
             if(DOMElements.confettiCanvas) DOMElements.confettiCanvas.style.display = 'none';
 
@@ -1179,7 +1229,7 @@
             
             finishedMarksByGoal = {};
             for (let i = 0; i < LINE_COUNT; i++) {
-                finishedMarksByGoal[i] = [];
+                finishedMarksByGoal[i] = { marks: [], startTime: null };
             }
             
             marks = currentStartMarks.map((mark, index) => {
@@ -1231,7 +1281,7 @@
 
         function startStarAnimation() {
             stopStarAnimation();
-            starAnimationInterval = setInterval(() => { if (!isGameRunning) drawGame(); }, 1000 / 30);
+            starAnimationInterval = setInterval(() => { if (!isGameRunning) drawGame({ drawMovingElements: false }); }, 1000 / 30);
         }
 
         function stopStarAnimation() {
@@ -1250,7 +1300,7 @@
                     marks.forEach(mark => { if (mark.char) mark.state = 'moving_down'; });
                     DOMElements.goButton.textContent = 'Stop';
                     DOMElements.goButton.style.backgroundColor = '#dd6b20'; 
-                    animate();
+                    if (!animationFrameId) animate();
                 }
             });
 
