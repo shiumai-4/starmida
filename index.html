@@ -56,12 +56,50 @@
             opacity: 0.7;
         }
 
-        /* gameWrapper内の他の要素をビデオより前面に配置 */
         #gameWrapper > *:not(#background-video) {
             position: relative;
             z-index: 2;
         }
 
+        /* ★★★ ここからが変更箇所 ★★★ */
+        /* --- タイトル画面 --- */
+        #titleScreen {
+            position: fixed; /* 画面全体を覆うようにfixedに変更 */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1a202c; /* bodyの背景色と合わせる */
+            z-index: 100; /* 最前面に表示 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
+        }
+        #titleScreen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+        #descriptionText {
+            color: white;
+            opacity: 0.7;
+            margin-top: 1rem;
+            margin-bottom: 6rem;
+        }
+        #tapToStart {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #ecc94b;
+            animation: pulse 2.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.05); }
+        }
+        /* ★★★ ここまでが変更箇所 ★★★ */
+        
         /* キャンバスとサイドボタン群を横並びにするコンテナ */
         #canvasAndControlsContainer {
             display: flex;
@@ -72,7 +110,6 @@
             justify-content: center;
         }
 
-        /* StageとHintボタンを縦に並べるコンテナ */
         #sideButtonsContainer {
             display: flex;
             flex-direction: column;
@@ -81,13 +118,11 @@
             gap: 1.5rem;
         }
 
-        /* キャンバスのスタイル */
         canvas {
             border-radius: 1rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             flex-shrink: 0;
         }
-        /* パーティクル用キャンバスのスタイル */
         #confettiCanvas {
             position: fixed;
             top: 0;
@@ -99,12 +134,10 @@
             display: none;
             background-color: transparent;
         }
-        /* ボタンコンテナのスタイル */
         .button-container {
             display: flex;
             gap: 1rem;
         }
-        /* ゲームボタンの共通スタイル */
         .game-button {
             padding: 0.75rem 1.5rem;
             border-radius: 0.75rem;
@@ -122,7 +155,6 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
-        /* Go! ボタンのスタイル */
         #goButton {
             background-color: #48bb78;
             color: white;
@@ -131,18 +163,15 @@
             background-color: #2f855a;
             cursor: not-allowed;
         }
-        /* リセットボタンのスタイル */
         #resetButton {
             background-color: #ecc94b;
             color: #2d3748;
         }
-        /* ステージボタンのスタイル */
         #stageButton {
             background-color: #4299e1;
             color: white;
         }
 
-        /* HINTボタンのスタイル */
         #hintButton {
             background-color: #e53e3e;
             color: white;
@@ -159,7 +188,6 @@
             background-color: #38a169;
         }
 
-        /* モーダルオーバーレイのスタイル */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -179,7 +207,6 @@
             opacity: 1;
             visibility: visible;
         }
-        /* モーダルコンテンツのスタイル */
         .modal-content {
             background-color: #2d3748;
             color: #e2e8f0;
@@ -219,7 +246,6 @@
             color: white;
         }
 
-        /* ステージ選択パネルのスタイル */
         #stageSelectModal .modal-content {
             display: flex;
             flex-direction: column;
@@ -236,10 +262,8 @@
             box-sizing: border-box;
         }
         #stageButtonsContainer {
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-            justify-content: flex-start;
+            display: grid; /* ★変更 */
+            grid-template-columns: repeat(5, 1fr); /* ★追加 */
             gap: 0.5rem;
         }
         .stage-button {
@@ -257,6 +281,7 @@
             font-size: 0.875rem;
             flex-shrink: 0;
             border: 2px solid transparent;
+            aspect-ratio: 1 / 1; /* ★追加: ボタンを正方形にする */
         }
         .stage-button:hover {
             background-color: #3182ce;
@@ -269,10 +294,9 @@
             background-color: #d69e2e;
         }
         .stage-button.current-stage {
-            border-color: #f87171;
+            border-color: #63b3ed; /* ★変更: 枠線の色 */
         }
 
-        /* Footer specific styles */
         .main-footer {
             width: 100%;
             max-width: 600px;
@@ -304,6 +328,12 @@
     </style>
 </head>
 <body>
+    <div id="titleScreen">
+        <h1 class="text-4xl font-bold">あみだくじゲーム</h1>
+        <p id="descriptionText">あみだの線を切り替えて、同じ色のゴールを目指そう！</p>
+        <p id="tapToStart">Tap to Start</p>
+    </div>
+
     <div id="gameWrapper">
         <video autoplay muted loop id="background-video">
             <source src="starmida_bg.mp4" type="video/mp4">
@@ -323,10 +353,9 @@
         </div>
 
         <div class="button-container">
-             <button id="goButton" class="game-button">Go!</button>
+                <button id="goButton" class="game-button">Go!</button>
         </div>
     </div>
-
     <div id="resultModal" class="modal-overlay">
         <div class="modal-content">
             <h2 id="resultText"></h2>
@@ -366,7 +395,7 @@
         const TARGET_ANIMATION_SECONDS = 2;
         const CLEAR_STATUS_STORAGE_KEY = 'amidakujiClearStatus';
         const PARTICLE_COLORS = ['#4299e1', '#63b3ed', '#90cdf4', '#a0aec0'];
-        const GOAL_AREA_HEIGHT_RATIO = 0.1;
+        const GOAL_AREA_HEIGHT_RATIO = 0.12;
         const FINISHED_MARK_FADE_IN_DURATION = 600;
 
         // --- シンボル定義 (Symbolic Definitions) ---
@@ -404,7 +433,7 @@
                 areaOnStates: [ true, true, false, true, true, false, false, true, true, true, true, true ],
                 hints: [[0, 'p2'], [5, 'p1']]
             },
-            { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'l' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'a', p2: 'r' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'a', p2: 'l' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'a', p2: 'r' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'n', p2: 'a' } }], areaOnStates: [ true, false, true, false, true, true, true, false, true, false, true, false ], hints: [[1, 'p2'], [7, 'p1']] },
+            { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'l' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'a', p2: 'r' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'a', p2: 'l' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'a', p2: 'r' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'n', p2: 'a' } }], areaOnStates: [ true, false, true, false, true, true, true, false, true, false, true, false ], hints: [[1, 'p2'], [7, 'p1']] },
             { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'n', p2: 'n' } }], areaOnStates: [ false, true, false, true, false, true, false, true, false, true, false, true ], hints: [[3, 'p2']] },
             { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'l', p2: 'r' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'r', p2: 'l' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'l', p2: 'a' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'r', p2: 'a' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'a', p2: 'l' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'a', p2: 'r' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'l', p2: 'r' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'r', p2: 'l' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'l', p2: 'a' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'r', p2: 'a' } }], areaOnStates: [ true, true, true, true, true, true, true, true, true, true, true, true ], hints: [] },
             { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'a', p2: 'a' } }], areaOnStates: [ true, true, false, true, false, true, false, true, true, true, false, true ], hints: [] },
@@ -429,6 +458,7 @@
             stageButtonsContainer: document.getElementById('stageButtonsContainer'),
             gameWrapper: document.getElementById('gameWrapper'),
             stageSelectTitle: document.getElementById('stageSelectTitle'),
+            titleScreen: document.getElementById('titleScreen'),
         };
         const ctx = DOMElements.canvas.getContext('2d');
         const confettiCtx = DOMElements.confettiCanvas.getContext('2d');
@@ -885,13 +915,10 @@
             ctx.globalAlpha = 1.0;
         }
 
-        // --- ★★★ ここからが修正箇所 ★★★ ---
         function drawFinishedMarks() {
             const lineEndY = DOMElements.canvas.height - GOAL_AREA_HEIGHT;
             const finishedMarkSize = MARK_FONT_SIZE * 0.6;
-            // 横方向のスペースを定義
             const horizontalSpacing = finishedMarkSize * 1.2;
-            // Y座標を固定値に設定
             const fixedY = lineEndY + (finishedMarkSize * 1.2);
 
             ctx.font = `900 ${finishedMarkSize}px "Font Awesome 6 Free"`;
@@ -910,11 +937,9 @@
                     ctx.globalAlpha = alpha;
                     
                     const goalMarkX = verticalLineX[goalIndex];
-                    // マーク群の合計幅を計算し、中央揃えになるように開始X座標を決定
                     const totalWidth = (goalData.marks.length - 1) * horizontalSpacing;
                     let startX = goalMarkX - totalWidth / 2;
                     
-                    // X座標をずらしながら横に描画
                     goalData.marks.forEach(mark => {
                         ctx.fillStyle = mark.color;
                         ctx.fillText(mark.icon, startX, fixedY);
@@ -925,7 +950,6 @@
                 }
             }
         }
-        // --- ★★★ ここまでが修正箇所 ★★★ ---
 
         function drawPulsingEffects() {
             const now = Date.now();
@@ -967,7 +991,6 @@
         }
 
         // --- アニメーションとエフェクト (Animation and Effects) ---
-        // ★変更点: 引数にcolorを追加
         function createSuccessBurst(x, y, color) {
             const particleCount = 5;
             const baseAngle = -Math.PI / 2;
@@ -979,7 +1002,6 @@
 
             for (let i = 0; i < particleCount; i++) {
                 const angle = startAngle + i * angleIncrement;
-                // ★変更点: 生成されるパーティクルにcolorプロパティを設定
                 particles.push({
                     x,
                     y,
@@ -1023,7 +1045,6 @@
                         goalData.startTime = Date.now();
                     }
                     
-                    // ★変更点: 正解時にマークの色をcreateSuccessBurst関数に渡す
                     if (mark.char && mark.targetEndMark === currentEndMarks[mark.finalLineIndex]) {
                         createSuccessBurst(verticalLineX[mark.finalLineIndex], lineEndY, mark.char.color);
                     }
@@ -1071,7 +1092,6 @@
                         const particleCount = 1;
                         for (let i = 0; i < particleCount; i++) {
                             const initialLifespan = 40;
-                            // ★変更点: パーティクルに、追従しているマークの色を設定する
                             particles.push({
                                 x: mark.x,
                                 y: mark.y,
@@ -1080,7 +1100,7 @@
                                 size: Math.random() * 4 + 1,
                                 lifespan: initialLifespan,
                                 initialLifespan,
-                                color: mark.char.color // この行を追加
+                                color: mark.char.color
                             });
                         }
                     }
@@ -1247,8 +1267,11 @@
             DOMElements.stageButtonsContainer.innerHTML = ''; 
             const clearStatus = getClearStatus();
             const stageSelectModalContent = document.querySelector('#stageSelectModal .modal-content');
-            const modalHeight = stageSelectModalContent ? parseFloat(stageSelectModalContent.style.maxHeight) : 270; 
-            const buttonSize = modalHeight / 5; 
+            const modalWidth = stageSelectModalContent ? parseFloat(stageSelectModalContent.style.width) : 380;
+            const gap = 0.5 * 16;
+            const padding = 0.5 * 16 * 2;
+            const buttonSize = (modalWidth - padding - (4 * gap)) / 5;
+             
             GAME_PRESETS.forEach((_, index) => {
                 const button = document.createElement('button');
                 button.textContent = `Stage ${index + 1}`;
@@ -1290,6 +1313,16 @@
         }
 
         // --- 初期化 (Initialization) ---
+        function initTitleScreen() {
+            DOMElements.titleScreen.addEventListener('click', () => {
+                DOMElements.titleScreen.classList.add('fade-out');
+                
+                setTimeout(() => {
+                    DOMElements.titleScreen.style.display = 'none';
+                }, 800);
+            }, { once: true });
+        }
+
         function addEventListeners() {
             DOMElements.goButton.addEventListener('click', () => {
                 if (isGameRunning) {
@@ -1340,6 +1373,7 @@
             initializeGameData(0);
             softResetGame();
             addEventListeners();
+            initTitleScreen();
         };
     </script>
 </body>
