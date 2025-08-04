@@ -27,8 +27,8 @@
         }
         /* ゲーム全体を囲むコンテナのスタイル */
         #gameWrapper {
-            position: relative; 
-            overflow: hidden;   
+            position: relative;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -60,23 +60,29 @@
             position: relative;
             z-index: 2;
         }
-
-        /* ★★★ ここからが変更箇所 ★★★ */
+        
         /* --- タイトル画面 --- */
         #titleScreen {
-            position: fixed; /* 画面全体を覆うようにfixedに変更 */
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #1a202c; /* bodyの背景色と合わせる */
-            z-index: 100; /* 最前面に表示 */
+            background-color: #1a202c;
+            z-index: 100;
+            display: flex;
+            flex-direction: column; /* ★修正 */
+            cursor: pointer;
+            transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
+            box-sizing: border-box; /* ★追加 */
+            padding-bottom: 1rem; /* ★追加 */
+        }
+        #titleContent { /* ★追加 */
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            cursor: pointer;
-            transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
         }
         #titleScreen.fade-out {
             opacity: 0;
@@ -98,12 +104,62 @@
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.6; transform: scale(1.05); }
         }
-        /* ★★★ ここまでが変更箇所 ★★★ */
         
+        /* 設定モーダルのスタイル */
+        #settingsModal .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        #settingsModal .toggle-label {
+            font-size: 1.1rem;
+        }
+        #settingsModal .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        #settingsModal .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        #settingsModal .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        #settingsModal .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        #settingsModal input:checked + .slider {
+            background-color: #48bb78;
+        }
+        #settingsModal input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
         /* キャンバスとサイドボタン群を横並びにするコンテナ */
         #canvasAndControlsContainer {
             display: flex;
-            align-items: center;
+            align-items: stretch;
             gap: 1rem;
             margin-bottom: 1.5rem;
             width: 100%;
@@ -111,11 +167,43 @@
         }
 
         #sideButtonsContainer {
+            position: relative;
+        }
+        
+        #mainControlButtons {
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
             gap: 1.5rem;
+            width: 100%;
+            align-items: center;
+
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+
+        #subControlButtons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            width: 100%;
+            
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+
+        .icon-button {
+            padding: 0;
+            width: 50px;
+            height: 50px;
+            font-size: 1.25rem;
+            background-color: #4a5568;
+            color: #e2e8f0;
+        }
+        .icon-button:hover {
+            background-color: #718096;
         }
 
         canvas {
@@ -216,17 +304,20 @@
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
             transform: scale(0.9);
             transition: transform 0.3s ease-in-out;
+            min-width: 300px;
         }
         .modal-overlay.show .modal-content {
             transform: scale(1);
         }
-        #resultModal .modal-button-container {
+        #resultModal .modal-button-container,
+        #tutorialModal .modal-button-container {
             display: flex;
             justify-content: center;
             gap: 1rem;
             margin-top: 1.5rem;
         }
-        #resultModal .modal-action-button {
+        #resultModal .modal-action-button,
+        #tutorialModal .modal-action-button {
             padding: 0.75rem 1.5rem;
             border-radius: 0.75rem;
             font-weight: bold;
@@ -234,10 +325,12 @@
             cursor: pointer;
             transition: all 0.2s ease-in-out;
         }
-        #resultModal .modal-action-button:hover {
+        #resultModal .modal-action-button:hover,
+        #tutorialModal .modal-action-button:hover {
             transform: translateY(-2px);
         }
-        #modalResetButton {
+        #modalResetButton,
+        #closeTutorialButton {
             background-color: #4299e1;
             color: white;
         }
@@ -245,6 +338,14 @@
             background-color: #48bb78;
             color: white;
         }
+        #tutorialModal .modal-content {
+            max-width: 500px;
+            text-align: left;
+        }
+        #tutorialText {
+            line-height: 1.8;
+        }
+
 
         #stageSelectModal .modal-content {
             display: flex;
@@ -262,8 +363,8 @@
             box-sizing: border-box;
         }
         #stageButtonsContainer {
-            display: grid; /* ★変更 */
-            grid-template-columns: repeat(5, 1fr); /* ★追加 */
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
             gap: 0.5rem;
         }
         .stage-button {
@@ -281,7 +382,7 @@
             font-size: 0.875rem;
             flex-shrink: 0;
             border: 2px solid transparent;
-            aspect-ratio: 1 / 1; /* ★追加: ボタンを正方形にする */
+            aspect-ratio: 1 / 1;
         }
         .stage-button:hover {
             background-color: #3182ce;
@@ -294,15 +395,15 @@
             background-color: #d69e2e;
         }
         .stage-button.current-stage {
-            border-color: #63b3ed; /* ★変更: 枠線の色 */
+            border-color: #63b3ed;
         }
 
         .main-footer {
             width: 100%;
             max-width: 600px;
             text-align: center;
-            color: #374151;
-            margin-top: 32px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .main-footer a {
             color: #d8971d;
@@ -325,13 +426,37 @@
             font-size: 0.8rem;
             color: #6b7280;
         }
+        /* ★フッターの表示位置を調整 */
+        #gameWrapper + .main-footer {
+            color: #374151;
+            margin-top: 32px;
+        }
+        #titleScreen .main-footer {
+            flex-shrink: 0;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            color: #6b7280;
+        }
     </style>
 </head>
 <body>
     <div id="titleScreen">
-        <h1 class="text-4xl font-bold">あみだくじゲーム</h1>
-        <p id="descriptionText">あみだの線を切り替えて、同じ色のゴールを目指そう！</p>
-        <p id="tapToStart">Tap to Start</p>
+        <div id="titleContent">
+            <h1 class="text-4xl font-bold">あみだくじゲーム</h1>
+            <p id="descriptionText">あみだの線を切り替えて、同じ色のゴールを目指そう！</p>
+            <p id="tapToStart">Tap to Start</p>
+        </div>
+        <footer class="main-footer">
+            <div class="footer-links">
+                <a href="https://example.com/portfolio" target="_blank" rel="noopener noreferrer">作品集</a>
+                <a href="https://x.com/your_x_handle" target="_blank" rel="noopener noreferrer">X</a>
+                <a href="https://example.com/privacy-policy" target="_blank" rel="noopener noreferrer">プライバシーポリシー</a>
+                <a href="https://example.com/contact" target="_blank" rel="noopener noreferrer">お問い合わせ</a>
+            </div>
+            <div class="footer-copyright">
+                ©︎2025 shiumai_4. All rights reserved.
+            </div>
+        </footer>
     </div>
 
     <div id="gameWrapper">
@@ -346,9 +471,26 @@
             <canvas id="amidakujiCanvas"></canvas>
             
             <div id="sideButtonsContainer">
-                <button id="stageButton" class="game-button">Stage</button>
-                <button id="resetButton" class="game-button">リセット</button>
-                <button id="hintButton" class="game-button">HINT</button>
+                <div id="mainControlButtons">
+                    <div class="text-center">
+                        <p id="currentStageLabel" class="text-white text-xs mb-1"></p>
+                        <button id="stageButton" class="game-button">Stage</button>
+                    </div>
+                    <button id="resetButton" class="game-button">リセット</button>
+                    <button id="hintButton" class="game-button">HINT</button>
+                    <button id="tutorialButton" class="game-button icon-button" title="チュートリアル" style="display: none;">
+                        <i class="fas fa-question"></i>
+                    </button>
+                </div>
+
+                <div id="subControlButtons">
+                    <button id="settingsButton" class="game-button icon-button" title="設定">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button id="backToTitleButton" class="game-button icon-button" title="タイトルへ戻る">
+                        <i class="fas fa-home"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -356,6 +498,7 @@
                 <button id="goButton" class="game-button">Go!</button>
         </div>
     </div>
+
     <div id="resultModal" class="modal-overlay">
         <div class="modal-content">
             <h2 id="resultText"></h2>
@@ -374,6 +517,36 @@
             </div>
         </div>
     </div>
+
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-2xl mb-4">設定</h2>
+            <div class="toggle-switch">
+                <span class="toggle-label">BGM</span>
+                <label class="switch">
+                    <input type="checkbox" id="bgmToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="toggle-switch">
+                <span class="toggle-label">SE</span>
+                <label class="switch">
+                    <input type="checkbox" id="seToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div id="tutorialModal" class="modal-overlay">
+        <div class="modal-content">
+            <p id="tutorialText"></p>
+            <div class="modal-button-container">
+                <button id="closeTutorialButton" class="modal-action-button">閉じる</button>
+            </div>
+        </div>
+    </div>
+
     <footer class="main-footer">
         <div class="footer-links">
             <a href="https://example.com/portfolio" target="_blank" rel="noopener noreferrer">作品集</a>
@@ -394,6 +567,7 @@
         const POINT_COUNT_PER_LINE = 9;
         const TARGET_ANIMATION_SECONDS = 2;
         const CLEAR_STATUS_STORAGE_KEY = 'amidakujiClearStatus';
+        const AUDIO_SETTINGS_STORAGE_KEY = 'amidakujiAudioSettings';
         const PARTICLE_COLORS = ['#4299e1', '#63b3ed', '#90cdf4', '#a0aec0'];
         const GOAL_AREA_HEIGHT_RATIO = 0.12;
         const FINISHED_MARK_FADE_IN_DURATION = 600;
@@ -415,9 +589,15 @@
             '#FF4500', '#8A2BE2', '#ADFF2F', '#FFB6C1', '#87CEEB', '#98FB98'
         ];
         
+        const TUTORIALS = [
+            { id: 1, text: "「Go!」ボタンを押す前に、あみだの線を切り替えて、同じ色の★が同じ色のゴールにたどり着くように設定しましょう。<br><br>色のついた四角いエリアをクリックすると、そのエリア内の横線のパターンが切り替わります。" },
+            { id: 2, text: "「Go!」ボタンを押す前に、あみだの線を切り替えて、同じ色の★が同じ色のゴールにたどり着くように設定しましょう。<br><br>色のついた四角いエリアをクリックすると、そのエリア内の横線のパターンが切り替わります。" },
+        ];
+
         // --- ゲームデータ (Game Data) ---
         const GAME_PRESETS = [
              {
+                tutorialId: 1,
                 startMarks: [MARKS.GOLD, EMPTY_MARK, EMPTY_MARK, MARKS.BLUE], 
                 endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE],
                 horizontalConnections: [
@@ -434,7 +614,7 @@
                 hints: [[0, 'p2'], [5, 'p1']]
             },
             { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'l' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'a', p2: 'r' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'a', p2: 'l' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'a', p2: 'r' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'n', p2: 'a' } }], areaOnStates: [ true, false, true, false, true, true, true, false, true, false, true, false ], hints: [[1, 'p2'], [7, 'p1']] },
-            { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'n', p2: 'n' } }], areaOnStates: [ false, true, false, true, false, true, false, true, false, true, false, true ], hints: [[3, 'p2']] },
+            { tutorialId: 2, startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'n', p2: 'n' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'n', p2: 'n' } }], areaOnStates: [ false, true, false, true, false, true, false, true, false, true, false, true ], hints: [[3, 'p2']] },
             { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'l', p2: 'r' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'r', p2: 'l' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'l', p2: 'a' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'r', p2: 'a' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'a', p2: 'l' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'a', p2: 'r' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'n', p2: 'a' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'l', p2: 'r' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'r', p2: 'l' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'l', p2: 'a' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'r', p2: 'a' } }], areaOnStates: [ true, true, true, true, true, true, true, true, true, true, true, true ], hints: [] },
             { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'a', p2: 'a' } }, { line: H_LINE(0, P[2], 1, P[2]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[5], 1, P[5]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(0, P[8], 1, P[8]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[0], 3, P[0]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[3], 3, P[3]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[6], 3, P[6]), patterns: { p1: 'a', p2: 'a' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'a', p2: 'a' } }], areaOnStates: [ true, true, false, true, false, true, false, true, true, true, false, true ], hints: [] },
             { startMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], endMarks: [MARKS.GOLD, MARKS.RED, MARKS.GREEN, MARKS.BLUE], horizontalConnections: [{ line: H_LINE(0, P[0], 1, P[0]), patterns: { p1: 'a', p2: 'n' } }, { line: H_LINE(0, P[3], 1, P[3]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(0, P[6], 1, P[6]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[1], 2, P[1]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[4], 2, P[4]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(1, P[7], 2, P[7]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[2], 3, P[2]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[5], 3, P[5]), patterns: { p1: 'a', p2: 'n' } },{ line: H_LINE(2, P[8], 3, P[8]), patterns: { p1: 'a', p2: 'n' } }], areaOnStates: [ true, false, false, false, true, false, false, false, true, true, true, false ], hints: [] },
@@ -459,9 +639,33 @@
             gameWrapper: document.getElementById('gameWrapper'),
             stageSelectTitle: document.getElementById('stageSelectTitle'),
             titleScreen: document.getElementById('titleScreen'),
+            settingsButton: document.getElementById('settingsButton'),
+            settingsModal: document.getElementById('settingsModal'),
+            bgmToggle: document.getElementById('bgmToggle'),
+            seToggle: document.getElementById('seToggle'),
+            backToTitleButton: document.getElementById('backToTitleButton'),
+            tutorialModal: document.getElementById('tutorialModal'),
+            tutorialText: document.getElementById('tutorialText'),
+            closeTutorialButton: document.getElementById('closeTutorialButton'),
+            tutorialButton: document.getElementById('tutorialButton'),
+            currentStageLabel: document.getElementById('currentStageLabel'),
         };
         const ctx = DOMElements.canvas.getContext('2d');
         const confettiCtx = DOMElements.confettiCanvas.getContext('2d');
+
+        // --- 音声関連 ---
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let bgmSource = null;
+        let audioSettings = { bgm: true, se: true };
+
+        const sounds = {
+            titleTransition: null,
+            buttonClick: null,
+            areaSwitch: null,
+            goalSuccess: null,
+            stageClear: null,
+            finalClear: null,
+        };
 
         // --- ゲーム状態変数 (Game State) ---
         let verticalLineX = [];
@@ -488,6 +692,68 @@
         let isFinishingAnimation = false;
         let finishedMarksByGoal = {};
         let GOAL_AREA_HEIGHT; 
+
+        // --- 音声制御 ---
+        async function loadAudioFile(url) {
+            try {
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                return await audioContext.decodeAudioData(arrayBuffer);
+            } catch (error) {
+                console.error(`Error loading audio file ${url}:`, error);
+                return null;
+            }
+        }
+
+        async function initAudio() {
+            // NOTE: 音声ファイルは各自で用意し、パスを合わせてください
+            sounds.titleTransition = await loadAudioFile('path/to/title_transition.mp3');
+            sounds.buttonClick = await loadAudioFile('path/to/button_click.mp3');
+            sounds.areaSwitch = await loadAudioFile('path/to/area_switch.mp3');
+            sounds.goalSuccess = await loadAudioFile('path/to/goal_success.mp3');
+            sounds.stageClear = await loadAudioFile('path/to/stage_clear.mp3');
+            sounds.finalClear = await loadAudioFile('path/to/final_clear.mp3');
+        }
+
+        function playSound(buffer) {
+            if (!audioSettings.se || !buffer || audioContext.state === 'suspended') return;
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            source.start(0);
+        }
+
+        async function playBGM() {
+            if (!audioSettings.bgm || bgmSource || audioContext.state === 'suspended') return;
+            const buffer = await loadAudioFile('path/to/bgm.mp3'); // NOTE: BGMファイル
+            if (!buffer) return;
+            bgmSource = audioContext.createBufferSource();
+            bgmSource.buffer = buffer;
+            bgmSource.loop = true;
+            bgmSource.connect(audioContext.destination);
+            bgmSource.start(0);
+        }
+
+        function stopBGM() {
+            if (bgmSource) {
+                bgmSource.stop();
+                bgmSource.disconnect();
+                bgmSource = null;
+            }
+        }
+        
+        function loadAudioSettings() {
+            const settings = localStorage.getItem(AUDIO_SETTINGS_STORAGE_KEY);
+            if (settings) {
+                audioSettings = JSON.parse(settings);
+            }
+            DOMElements.bgmToggle.checked = audioSettings.bgm;
+            DOMElements.seToggle.checked = audioSettings.se;
+        }
+
+        function saveAudioSettings() {
+            localStorage.setItem(AUDIO_SETTINGS_STORAGE_KEY, JSON.stringify(audioSettings));
+        }
 
         // --- ローカルストレージ管理 (Storage Management) ---
         function getClearStatus() {
@@ -592,7 +858,7 @@
         
         // --- UIイベントハンドラ (UI Event Handlers) ---
         function handleCanvasClick(event) {
-            if (isGameRunning || DOMElements.stageSelectModal.classList.contains('show')) return;
+            if (isGameRunning || DOMElements.stageSelectModal.classList.contains('show') || DOMElements.settingsModal.classList.contains('show') || DOMElements.tutorialModal.classList.contains('show')) return;
             const rect = DOMElements.canvas.getBoundingClientRect();
             let clientX, clientY;
             if (event.type === 'touchstart') {
@@ -609,25 +875,53 @@
                 if (isHintActive && isCurrentAreaHint) continue;
                 if (isPointInRect(mouseX, mouseY, currentArea) && currentArea.isOn) {
                     clickedOnActiveArea = true;
-                    if (currentArea.isSelected) {
+                    
+                    const patternChanged = currentArea.isSelected;
+                    if (patternChanged) {
                         currentArea.associatedLines.forEach(associatedLine => {
-                            const originalConn = associatedLine.originalConnection;
-                            originalConn.currentActivePattern = (originalConn.currentActivePattern === 'p1') ? 'p2' : 'p1';
+                            const conn = associatedLine.originalConnection;
+                            const oldPatternKey = conn.currentActivePattern;
+                            const newPatternKey = (oldPatternKey === 'p1') ? 'p2' : 'p1';
+                            
+                            const oldAttribute = conn.patterns[oldPatternKey];
+                            const newAttribute = conn.patterns[newPatternKey];
+
+                            if (oldAttribute !== newAttribute) {
+                                const wasVisible = oldAttribute !== 'n';
+                                const isNowVisible = newAttribute !== 'n';
+
+                                if (wasVisible && isNowVisible) {
+                                    conn.isFadingOutToChange = true;
+                                    conn.nextPatternKey = newPatternKey;
+                                    conn.targetOpacity = 0;
+                                } else {
+                                    conn.currentActivePattern = newPatternKey;
+                                    conn.targetOpacity = isNowVisible ? 1 : 0;
+                                }
+                            }
                         });
+
                         areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
                         initializeLadderMap();
+                        playSound(sounds.areaSwitch);
                     } else {
                         areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
                         currentArea.isSelected = true;
                         associateHorizontalLinesWithArea(currentArea);
+                        playSound(sounds.areaSwitch);
                     }
+                    
+                    if (!animationFrameId) animate();
                     break;
                 }
             }
             if (!clickedOnActiveArea) {
-                areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
+                const needsRedraw = areas.some(a => a.isSelected);
+                if (needsRedraw) {
+                    areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
+                    drawGame();
+                }
             }
-            drawGame();
         }
 
         function resizeCanvas() {
@@ -685,7 +979,7 @@
             DOMElements.goButton.style.height = `${buttonSize}px`;
 
             const sideButtons = [DOMElements.stageButton, DOMElements.resetButton, DOMElements.hintButton];
-        
+
             DOMElements.hintButton.style.padding = '0.75rem 1.5rem';
             sideButtons.forEach(btn => btn.style.width = 'auto');
 
@@ -709,6 +1003,13 @@
 
             let stageSelectModalHeight = Math.min(currentCanvasHeight * 3 / 4, 270);
             let stageSelectModalWidth = stageSelectModalHeight * (3 / 2);
+
+            // ▼▼▼ ここから修正 ▼▼▼
+            // モーダルの幅がウィンドウ幅の90%を超えないように調整
+            const maxModalWidth = window.innerWidth * 0.9;
+            stageSelectModalWidth = Math.min(stageSelectModalWidth, maxModalWidth);
+            // ▲▲▲ ここまで修正 ▲▲▲
+
             const stageSelectModalContent = document.querySelector('#stageSelectModal .modal-content');
             if (stageSelectModalContent) {
                 stageSelectModalContent.style.maxHeight = `${stageSelectModalHeight}px`;
@@ -735,8 +1036,8 @@
             if (!isGameRunning) {
                 marks.forEach((mark, index) => {
                     if (mark && mark.char && verticalLineX[index]) {
-                         mark.x = verticalLineX[index]; mark.y = LINE_START_Y * 0.65;
-                         mark.originalX = verticalLineX[index]; mark.originalY = LINE_START_Y * 0.65;
+                            mark.x = verticalLineX[index]; mark.y = LINE_START_Y * 0.65;
+                            mark.originalX = verticalLineX[index]; mark.originalY = LINE_START_Y * 0.65;
                     }
                 });
                 areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
@@ -745,14 +1046,25 @@
         }
 
         // --- ゲームロジック (Game Logic) ---
-        function initializeGameData(presetIndex = 0) {
+        function initializeGameData(presetIndex = 0, isInitialLoad = false) {
             const selectedPreset = GAME_PRESETS[presetIndex];
             currentStartMarks = selectedPreset.startMarks;
             currentEndMarks = selectedPreset.endMarks;
             currentStageIndex = presetIndex;
-            allHorizontalConnections = selectedPreset.horizontalConnections.map(presetConn => ({
-                ...presetConn.line, patterns: JSON.parse(JSON.stringify(presetConn.patterns)), currentActivePattern: 'p1'
-            }));
+            allHorizontalConnections = selectedPreset.horizontalConnections.map(presetConn => {
+                const conn = {
+                    ...presetConn.line, 
+                    patterns: JSON.parse(JSON.stringify(presetConn.patterns)), 
+                    currentActivePattern: 'p1',
+                    isFadingOutToChange: false,
+                    nextPatternKey: null,
+                };
+                
+                const isInitiallyVisible = conn.patterns[conn.currentActivePattern] !== 'n';
+                conn.targetOpacity = isInitiallyVisible ? 1 : 0;
+                conn.opacity = isInitialLoad ? conn.targetOpacity : 0;
+                return conn;
+            });
             selectedPreset.areaOnStates.forEach((isOnState, index) => {
                 if (areas[index]) areas[index].isOn = isOnState;
             });
@@ -760,6 +1072,7 @@
             DOMElements.hintButton.classList.remove('active');
             originalPatternsBeforeHint = [];
             initializeLadderMap();
+            if (!animationFrameId) animate();
         }
 
         function initializeLadderMap() {
@@ -770,7 +1083,9 @@
                 ladderMap[i] = {};
             }
             allHorizontalConnections.forEach(conn => {
-                const attribute = conn.patterns[conn.currentActivePattern];
+                const patternKey = conn.isFadingOutToChange ? conn.nextPatternKey === 'p1' ? 'p2' : 'p1' : conn.currentActivePattern;
+                const attribute = conn.patterns[patternKey];
+
                 if (attribute === 'l' && conn.fromLine < conn.toLine) leftOnlyLines.push(conn);
                 else if (attribute === 'r' && conn.fromLine < conn.toLine) rightOnlyLines.push(conn);
                 
@@ -780,9 +1095,16 @@
         }
 
         function toggleHint() {
+            playSound(sounds.buttonClick);
             isHintActive = !isHintActive;
             DOMElements.hintButton.classList.toggle('active', isHintActive);
             const currentHints = GAME_PRESETS[currentStageIndex].hints;
+
+            const updateOpacityForConnection = (conn) => {
+                const isVisible = conn.patterns[conn.currentActivePattern] !== 'n';
+                conn.targetOpacity = isVisible ? 1 : 0;
+            };
+
             if (isHintActive) {
                 originalPatternsBeforeHint = [];
                 currentHints.forEach(([areaIndex, targetPattern]) => {
@@ -794,6 +1116,7 @@
                             if (isPointInRect(midX, midY, area) && conn.currentActivePattern !== targetPattern) {
                                 originalPatternsBeforeHint.push({ connection: conn, originalPattern: conn.currentActivePattern });
                                 conn.currentActivePattern = targetPattern;
+                                updateOpacityForConnection(conn);
                             }
                         });
                     }
@@ -801,11 +1124,12 @@
             } else {
                 originalPatternsBeforeHint.forEach(item => {
                     item.connection.currentActivePattern = item.originalPattern;
+                    updateOpacityForConnection(item.connection);
                 });
                 originalPatternsBeforeHint = [];
             }
             initializeLadderMap();
-            drawGame();
+            if (!animationFrameId) animate();
         }
         
         // --- 描画関連 (Drawing Functions) ---
@@ -819,27 +1143,34 @@
                 ctx.lineTo(x, lineEndY);
                 ctx.stroke();
             });
+            
             ctx.lineWidth = 2;
-            for (const fromLineIndex in ladderMap) {
-                for (const fromPointIndex in ladderMap[fromLineIndex]) {
-                    const conn = ladderMap[fromLineIndex][fromPointIndex];
-                    if (conn.attribute === 'n' || parseInt(fromLineIndex) >= conn.targetLine) continue;
-                    
-                    const leftX = verticalLineX[fromLineIndex];
-                    const rightX = verticalLineX[conn.targetLine];
-                    const y = pointY[fromPointIndex];
-                    const shortenBy = (rightX - leftX) * 0.20;
-                    let drawX1 = leftX, drawX2 = rightX;
-                    if (conn.attribute === 'l') drawX1 = leftX + shortenBy;
-                    else if (conn.attribute === 'r') drawX2 = rightX - shortenBy;
-                    
-                    ctx.strokeStyle = '#cbd5e0';
-                    ctx.beginPath();
-                    ctx.moveTo(drawX1, y);
-                    ctx.lineTo(drawX2, y);
-                    ctx.stroke();
-                }
-            }
+
+            allHorizontalConnections.forEach(conn => {
+                if (conn.opacity === 0) return;
+
+                const fromLineIndex = conn.fromLine;
+                const toLineIndex = conn.toLine;
+                if (fromLineIndex >= toLineIndex) return;
+                
+                const patternKey = conn.isFadingOutToChange ? (conn.nextPatternKey === 'p1' ? 'p2' : 'p1') : conn.currentActivePattern;
+                const attribute = conn.patterns[patternKey];
+                
+                const leftX = verticalLineX[fromLineIndex];
+                const rightX = verticalLineX[toLineIndex];
+                const y = pointY[conn.fromPoint];
+                
+                const shortenBy = (rightX - leftX) * 0.20;
+                let drawX1 = leftX, drawX2 = rightX;
+                if (attribute === 'l') drawX1 = leftX + shortenBy;
+                else if (attribute === 'r') drawX2 = rightX - shortenBy;
+                
+                ctx.strokeStyle = `rgba(203, 213, 224, ${conn.opacity})`;
+                ctx.beginPath();
+                ctx.moveTo(drawX1, y);
+                ctx.lineTo(drawX2, y);
+                ctx.stroke();
+            });
         }
 
         function drawClickableAreas() {
@@ -956,6 +1287,8 @@
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             const drawPulsingStar = (line, isRightToLeft) => {
+                if (line.opacity <= 0.1) return;
+
                 const x1 = verticalLineX[line.fromLine];
                 const x2 = verticalLineX[line.toLine];
                 const y = pointY[line.fromPoint];
@@ -965,8 +1298,11 @@
                 const scaleFactor = Math.sin(progress * Math.PI);
                 const currentStarSize = MARK_FONT_SIZE * 0.2 + (MARK_FONT_SIZE * 0.4 * scaleFactor);
                 const starX = isRightToLeft ? x2 - distance * progress : x1 + distance * progress;
+                
+                ctx.globalAlpha = line.opacity;
                 ctx.font = `${currentStarSize}px "Segoe UI Emoji"`;
                 ctx.fillText('✨', starX, y);
+                ctx.globalAlpha = 1.0;
             };
             leftOnlyLines.forEach(line => drawPulsingStar(line, true));
             rightOnlyLines.forEach(line => drawPulsingStar(line, false));
@@ -1047,6 +1383,7 @@
                     
                     if (mark.char && mark.targetEndMark === currentEndMarks[mark.finalLineIndex]) {
                         createSuccessBurst(verticalLineX[mark.finalLineIndex], lineEndY, mark.char.color);
+                        playSound(sounds.goalSuccess);
                     }
 
                     checkGameEnd();
@@ -1072,13 +1409,37 @@
         }
 
         function animate() {
-            const isFading = Object.values(finishedMarksByGoal).some(goal => {
+            allHorizontalConnections.forEach(conn => {
+                if (conn.isFadingOutToChange && conn.opacity < 0.01) {
+                    conn.currentActivePattern = conn.nextPatternKey;
+                    conn.isFadingOutToChange = false;
+                    conn.nextPatternKey = null;
+                    conn.targetOpacity = 1;
+                    initializeLadderMap();
+                }
+            });
+
+            let isFading = false;
+            const fadeSpeed = 1 / (60 * 0.3);
+
+            allHorizontalConnections.forEach(conn => {
+                if (Math.abs(conn.opacity - conn.targetOpacity) > 0.001) {
+                    isFading = true;
+                    if (conn.opacity < conn.targetOpacity) {
+                        conn.opacity = Math.min(conn.opacity + fadeSpeed, conn.targetOpacity);
+                    } else {
+                        conn.opacity = Math.max(conn.opacity - fadeSpeed, conn.targetOpacity);
+                    }
+                }
+            });
+
+            const isFadingFinishedMarks = Object.values(finishedMarksByGoal).some(goal => {
                 if (!goal.startTime) return false;
                 const elapsedTime = Date.now() - goal.startTime;
                 return elapsedTime < FINISHED_MARK_FADE_IN_DURATION;
             });
 
-            if (!isGameRunning && particles.length === 0 && !isFading) {
+            if (!isGameRunning && particles.length === 0 && !isFadingFinishedMarks && !isFading) {
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
                 return;
@@ -1135,6 +1496,13 @@
                         clearStatus[currentStageIndex] = true;
                         saveClearStatus(clearStatus);
                         const isFinalStage = currentStageIndex === GAME_PRESETS.length - 1;
+                        
+                        if (isFinalStage) {
+                            playSound(sounds.finalClear);
+                        } else {
+                            playSound(sounds.stageClear);
+                        }
+                        
                         showResultPanel(isFinalStage ? 'おめでとう！最後のステージをクリアした！' : 'クリア！', isFinalStage);
                     } else {
                         showResultPanel('失敗！', false);
@@ -1216,6 +1584,27 @@
             DOMElements.resultModal.classList.remove('show');
         }
 
+        function showTutorialModal(text) {
+            DOMElements.tutorialText.innerHTML = text;
+            DOMElements.tutorialModal.classList.add('show');
+        }
+
+        function hideTutorialModal() {
+            DOMElements.tutorialModal.classList.remove('show');
+        }
+
+        function checkAndShowTutorial(stageIndex) {
+            const preset = GAME_PRESETS[stageIndex];
+            if (preset && preset.tutorialId) {
+                const tutorial = TUTORIALS.find(t => t.id === preset.tutorialId);
+                if (tutorial) {
+                    setTimeout(() => {
+                        showTutorialModal(tutorial.text);
+                    }, 300);
+                }
+            }
+        }
+
         function resetGame() {
             cancelAnimationFrame(animationFrameId);
             animationFrameId = null;
@@ -1223,13 +1612,12 @@
             gameResult = null;
             hideResultPanel(); 
             hideStageSelectionPanel();
+            hideTutorialModal();
             initializeGameData(currentStageIndex); 
             softResetGame();
         }
         
         function softResetGame() {
-            cancelAnimationFrame(animationFrameId);
-            animationFrameId = null;
             if(clearAnimationId) cancelAnimationFrame(clearAnimationId);
             if(DOMElements.confettiCanvas) DOMElements.confettiCanvas.style.display = 'none';
 
@@ -1252,6 +1640,21 @@
                 finishedMarksByGoal[i] = { marks: [], startTime: null };
             }
             
+            // ▼▼▼ ここから追加 ▼▼▼
+            // チュートリアルボタンの表示制御
+            const preset = GAME_PRESETS[currentStageIndex];
+            if (preset && preset.tutorialId) {
+                // icon-button は display:flex で中央揃えしているため flex を使用
+                DOMElements.tutorialButton.style.display = 'flex';
+            } else {
+                DOMElements.tutorialButton.style.display = 'none';
+            }
+            // ▲▲▲ ここまで追加 ▲▲▲
+
+            if (DOMElements.currentStageLabel) {
+                DOMElements.currentStageLabel.textContent = `Stage ${currentStageIndex + 1}`;
+            }
+            
             marks = currentStartMarks.map((mark, index) => {
                 if (!mark) return { char: null, state: 'finished' };
                 const targetMark = currentEndMarks.find(endMark => endMark && endMark.id === mark.id) || null;
@@ -1263,6 +1666,7 @@
         }
 
         function showStageSelectionPanel() {
+            playSound(sounds.buttonClick);
             softResetGame(); 
             DOMElements.stageButtonsContainer.innerHTML = ''; 
             const clearStatus = getClearStatus();
@@ -1271,7 +1675,7 @@
             const gap = 0.5 * 16;
             const padding = 0.5 * 16 * 2;
             const buttonSize = (modalWidth - padding - (4 * gap)) / 5;
-             
+                
             GAME_PRESETS.forEach((_, index) => {
                 const button = document.createElement('button');
                 button.textContent = `Stage ${index + 1}`;
@@ -1297,9 +1701,40 @@
         }
 
         function handleStageButtonClick(index) {
+            playSound(sounds.buttonClick);
+            
+            stopStarAnimation();
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            
             initializeGameData(index);
             softResetGame();
             hideStageSelectionPanel();
+            checkAndShowTutorial(index);
+        }
+
+        function showTitleScreen() {
+            playSound(sounds.buttonClick);
+            stopBGM();
+            
+            DOMElements.titleScreen.style.display = 'flex';
+            DOMElements.titleScreen.classList.remove('fade-out');
+            
+            currentStageIndex = 0;
+            resetGame();
+            
+            initTitleScreen();
+        }
+
+        function showSettingsModal() {
+            playSound(sounds.buttonClick);
+            DOMElements.settingsModal.classList.add('show');
+        }
+
+        function hideSettingsModal() {
+            DOMElements.settingsModal.classList.remove('show');
         }
 
         function startStarAnimation() {
@@ -1314,8 +1749,16 @@
 
         // --- 初期化 (Initialization) ---
         function initTitleScreen() {
-            DOMElements.titleScreen.addEventListener('click', () => {
+            DOMElements.titleScreen.addEventListener('click', (e) => {
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
                 DOMElements.titleScreen.classList.add('fade-out');
+                playSound(sounds.titleTransition);
+                playBGM();
+
+                checkAndShowTutorial(0);
                 
                 setTimeout(() => {
                     DOMElements.titleScreen.style.display = 'none';
@@ -1325,6 +1768,7 @@
 
         function addEventListeners() {
             DOMElements.goButton.addEventListener('click', () => {
+                playSound(sounds.buttonClick);
                 if (isGameRunning) {
                     softResetGame();
                 } else {
@@ -1337,10 +1781,17 @@
                 }
             });
 
-            DOMElements.resetButton.addEventListener('click', resetGame);
-            DOMElements.modalResetButton.addEventListener('click', softResetGame);
+            DOMElements.resetButton.addEventListener('click', () => {
+                playSound(sounds.buttonClick);
+                resetGame();
+            });
+            DOMElements.modalResetButton.addEventListener('click', () => {
+                playSound(sounds.buttonClick);
+                softResetGame();
+            });
             
             DOMElements.nextStageButton.addEventListener('click', () => {
+                playSound(sounds.buttonClick);
                 if (currentStageIndex < GAME_PRESETS.length - 1) {
                     handleStageButtonClick(currentStageIndex + 1);
                 }
@@ -1348,14 +1799,54 @@
 
             DOMElements.stageButton.addEventListener('click', showStageSelectionPanel);
             DOMElements.hintButton.addEventListener('click', toggleHint);
+            
+            DOMElements.settingsButton.addEventListener('click', showSettingsModal);
+            DOMElements.backToTitleButton.addEventListener('click', showTitleScreen);
+            DOMElements.settingsModal.addEventListener('click', e => { if (e.target === DOMElements.settingsModal) hideSettingsModal(); });
+
+            DOMElements.bgmToggle.addEventListener('change', (e) => {
+                audioSettings.bgm = e.target.checked;
+                if (audioSettings.bgm) {
+                    playBGM();
+                } else {
+                    stopBGM();
+                }
+                saveAudioSettings();
+            });
+
+            DOMElements.seToggle.addEventListener('change', (e) => {
+                audioSettings.se = e.target.checked;
+                saveAudioSettings();
+            });
+
             DOMElements.stageSelectModal.addEventListener('click', e => { if (e.target === DOMElements.stageSelectModal) hideStageSelectionPanel(); });
             
+            DOMElements.closeTutorialButton.addEventListener('click', hideTutorialModal);
+            DOMElements.tutorialModal.addEventListener('click', e => {
+                if (e.target === DOMElements.tutorialModal) {
+                    hideTutorialModal();
+                }
+            });
+            
+            // ▼▼▼ ここから追加 ▼▼▼
+            DOMElements.tutorialButton.addEventListener('click', () => {
+                playSound(sounds.buttonClick);
+                const preset = GAME_PRESETS[currentStageIndex];
+                if (preset && preset.tutorialId) {
+                    const tutorial = TUTORIALS.find(t => t.id === preset.tutorialId);
+                    if (tutorial) {
+                        showTutorialModal(tutorial.text);
+                    }
+                }
+            });
+            // ▲▲▲ ここまで追加 ▲▲▲
+
             window.addEventListener('resize', resizeCanvas);
             DOMElements.canvas.addEventListener('click', handleCanvasClick);
             DOMElements.canvas.addEventListener('touchstart', handleCanvasClick, { passive: true });
 
             window.addEventListener('click', function(e) {
-                if (!DOMElements.canvas.contains(e.target)) {
+                if (!DOMElements.canvas.contains(e.target) && !DOMElements.stageButton.contains(e.target) && !DOMElements.resetButton.contains(e.target) && !DOMElements.hintButton.contains(e.target)) {
                     const needsRedraw = areas.some(a => a.isSelected);
                     if (needsRedraw) {
                         areas.forEach(a => {
@@ -1370,7 +1861,9 @@
 
         window.onload = () => {
             resizeCanvas();
-            initializeGameData(0);
+            loadAudioSettings();
+            initAudio();
+            initializeGameData(0, true);
             softResetGame();
             addEventListeners();
             initTitleScreen();
