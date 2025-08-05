@@ -282,7 +282,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.5);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -304,7 +304,7 @@
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
             transform: scale(0.9);
             transition: transform 0.3s ease-in-out;
-            min-width: 300px;
+            min-width: 340px;
         }
         .modal-overlay.show .modal-content {
             transform: scale(1);
@@ -649,6 +649,7 @@
             closeTutorialButton: document.getElementById('closeTutorialButton'),
             tutorialButton: document.getElementById('tutorialButton'),
             currentStageLabel: document.getElementById('currentStageLabel'),
+            mainControlButtons: document.getElementById('mainControlButtons'),
         };
         const ctx = DOMElements.canvas.getContext('2d');
         const confettiCtx = DOMElements.confettiCanvas.getContext('2d');
@@ -782,6 +783,22 @@
 
         function isPointInRect(x, y, rect) {
             return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
+        }
+
+        function updateMainButtonsGap() {
+            const mainButtons = DOMElements.mainControlButtons;
+            if (!mainButtons) return;
+
+            const isTutorialButtonVisible = DOMElements.tutorialButton.style.display !== 'none';
+            const wrapperWidth = DOMElements.gameWrapper.offsetWidth;
+            // ゲームコンテナの最小幅が720pxなので、それより少し広い800pxを狭い画面の基準とします
+            const isNarrow = wrapperWidth < 800; 
+
+            if (isTutorialButtonVisible && isNarrow) {
+                mainButtons.style.gap = '0.75rem'; // 通常(1.5rem)の半分
+            } else {
+                mainButtons.style.gap = '1.5rem'; // デフォルト値
+            }
         }
 
         // --- レイアウトと座標計算 (Layout and Coordinate Setup) ---
@@ -1042,6 +1059,9 @@
                 });
                 areas.forEach(a => { a.isSelected = false; a.associatedLines = []; });
             }
+
+            updateMainButtonsGap();
+
             drawGame();
         }
 
@@ -1447,7 +1467,9 @@
             
             marks.forEach(updateMarkPosition);
             
-            if (!isFinishingAnimation) {
+            // ▼▼▼ ここから修正 ▼▼▼
+            // isGameRunning の条件を追加し、ゲーム実行中のみパーティクルを生成するようにする
+            if (isGameRunning && !isFinishingAnimation) {
                 marks.forEach(mark => {
                     if (mark.state !== 'finished' && mark.char) {
                         const particleCount = 1;
@@ -1467,6 +1489,7 @@
                     }
                 });
             }
+            // ▲▲▲ ここまで修正 ▲▲▲
 
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
@@ -1661,39 +1684,50 @@
                 return { id: String.fromCharCode(65 + index), char: mark, x: verticalLineX[index], y: LINE_START_Y * 0.65, originalX: verticalLineX[index], originalY: LINE_START_Y * 0.65, currentLineIndex: index, currentPointIndex: -1, state: 'idle', targetEndMark: targetMark, finalLineIndex: -1 };
             });
 
+            updateMainButtonsGap();
+
             drawGame();
             startStarAnimation();
         }
 
         function showStageSelectionPanel() {
             playSound(sounds.buttonClick);
-            softResetGame(); 
-            DOMElements.stageButtonsContainer.innerHTML = ''; 
+            softResetGame();
+            DOMElements.stageButtonsContainer.innerHTML = '';
             const clearStatus = getClearStatus();
-            const stageSelectModalContent = document.querySelector('#stageSelectModal .modal-content');
-            const modalWidth = stageSelectModalContent ? parseFloat(stageSelectModalContent.style.width) : 380;
-            const gap = 0.5 * 16;
-            const padding = 0.5 * 16 * 2;
-            const buttonSize = (modalWidth - padding - (4 * gap)) / 5;
-                
-            GAME_PRESETS.forEach((_, index) => {
-                const button = document.createElement('button');
-                button.textContent = `Stage ${index + 1}`;
-                button.className = 'stage-button';
-                button.style.width = `${buttonSize}px`; 
-                button.style.height = `${buttonSize}px`;
-                if (clearStatus[index]) button.classList.add('cleared');
-                if (index === currentStageIndex) button.classList.add('current-stage');
-                button.onclick = () => handleStageButtonClick(index);
-                DOMElements.stageButtonsContainer.appendChild(button);
-            });
+
+            // 先にモーダルを表示させる
             DOMElements.stageSelectModal.classList.add('show');
-            const currentStageBtn = DOMElements.stageButtonsContainer.querySelector('.current-stage');
-            if (currentStageBtn) {
-                requestAnimationFrame(() => {
-                    DOMElements.stageButtonsFrame.scrollTop = currentStageBtn.offsetTop - (DOMElements.stageButtonsFrame.clientHeight / 2) + (currentStageBtn.offsetHeight / 2);
+
+            // requestAnimationFrameを使い、モーダルの表示が確定して正しい幅が取得できるタイミングで処理を実行
+            requestAnimationFrame(() => {
+                // ステージボタンを囲む領域の実際のコンテンツ幅を取得
+                const frameWidth = DOMElements.stageButtonsFrame.clientWidth;
+                const gap = 0.5 * 16; // CSSの gap: 0.5rem (8px)
+                const totalGap = 4 * gap;
+                const rightMargin = 15; // 確保したい右端の余白(15px)
+                
+                // 新しい計算式でボタンサイズを算出
+                const buttonSize = (frameWidth - totalGap - rightMargin) / 5;
+
+                GAME_PRESETS.forEach((_, index) => {
+                    const button = document.createElement('button');
+                    button.textContent = `Stage ${index + 1}`;
+                    button.className = 'stage-button';
+                    button.style.width = `${buttonSize}px`;
+                    button.style.height = `${buttonSize}px`; // 正方形を維持するため高さも設定
+                    if (clearStatus[index]) button.classList.add('cleared');
+                    if (index === currentStageIndex) button.classList.add('current-stage');
+                    button.onclick = () => handleStageButtonClick(index);
+                    DOMElements.stageButtonsContainer.appendChild(button);
                 });
-            }
+
+                // ボタンがDOMに追加された後に、現在のステージが中央に来るようにスクロール位置を調整
+                const currentStageBtn = DOMElements.stageButtonsContainer.querySelector('.current-stage');
+                if (currentStageBtn) {
+                    DOMElements.stageButtonsFrame.scrollTop = currentStageBtn.offsetTop - (DOMElements.stageButtonsFrame.clientHeight / 2) + (currentStageBtn.offsetHeight / 2);
+                }
+            });
         }
 
         function hideStageSelectionPanel() {
