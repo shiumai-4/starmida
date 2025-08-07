@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>あみだくじ</title>
+    <title>StarMida</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
@@ -23,6 +23,12 @@
         @media (max-width: 720px) {
             body {
                 align-items: flex-start;
+            }
+            .main-footer {
+                box-sizing: border-box; /* 幅計算のため追加 */
+                width: 100%;
+                padding-left: 1rem;
+                padding-right: 1rem;
             }
         }
         /* ゲーム全体を囲むコンテナのスタイル */
@@ -344,6 +350,7 @@
         }
         #tutorialText {
             line-height: 1.8;
+            text-align: center;
         }
 
 
@@ -404,6 +411,7 @@
             text-align: center;
             margin-left: auto;
             margin-right: auto;
+            margin-top: 40px;
         }
         .main-footer a {
             color: #d8971d;
@@ -442,7 +450,7 @@
 <body>
     <div id="titleScreen">
         <div id="titleContent">
-            <h1 class="text-4xl font-bold">あみだくじゲーム</h1>
+            <h1 class="text-4xl font-bold">StarMida</h1>
             <p id="descriptionText">あみだの線を切り替えて、同じ色のゴールを目指そう！</p>
             <p id="tapToStart">Tap to Start</p>
         </div>
@@ -465,7 +473,7 @@
             お使いのブラウザは動画タグをサポートしていません。
         </video>
 
-        <h1 class="text-3xl font-bold mb-6">あみだくじゲーム</h1>
+        <h1 class="text-3xl font-bold mb-6">StarMida</h1>
         
         <div id="canvasAndControlsContainer">
             <canvas id="amidakujiCanvas"></canvas>
@@ -503,7 +511,7 @@
         <div class="modal-content">
             <h2 id="resultText"></h2>
             <div class="modal-button-container">
-                <button id="modalResetButton" class="modal-action-button">リセット</button>
+                <button id="modalResetButton" class="modal-action-button">閉じる</button>
                 <button id="nextStageButton" class="modal-action-button" style="display: none;">次へ</button>
             </div>
         </div>
@@ -650,6 +658,7 @@
             tutorialButton: document.getElementById('tutorialButton'),
             currentStageLabel: document.getElementById('currentStageLabel'),
             mainControlButtons: document.getElementById('mainControlButtons'),
+            backgroundVideo: document.getElementById('background-video'),
         };
         const ctx = DOMElements.canvas.getContext('2d');
         const confettiCtx = DOMElements.confettiCanvas.getContext('2d');
@@ -1901,6 +1910,10 @@
             softResetGame();
             addEventListeners();
             initTitleScreen();
+
+            if (DOMElements.backgroundVideo) {
+                DOMElements.backgroundVideo.playbackRate = 0.5;
+            }
         };
     </script>
 </body>
